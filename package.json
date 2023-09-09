@@ -1,0 +1,19 @@
+{
+    "name": "@iammati/git-ai",
+    "author": {
+        "name": "Mati",
+        "email": "mati_01@icloud.com",
+        "url": "https://infraops.dev"
+    },
+    "dependencies": {
+        "@vercel/ncc": "^0.38.0",
+        "openai": "^4.6.0",
+        "pkg": "^5.8.1",
+        "simple-git": "^3.19.1"
+    },
+    "pkg": {
+        "options": [
+            "experimental-modules"
+        ]
+    }
+}
