@@ -3,17 +3,12 @@
     "author": {
         "name": "Mati",
         "email": "mati_01@icloud.com",
-        "url": "https://infraops.dev"
+        "url": "https://infraops.dev/products/git-ai"
     },
     "dependencies": {
-        "@vercel/ncc": "^0.38.0",
+        "dotenv": "^16.3.1",
         "openai": "^4.6.0",
-        "pkg": "^5.8.1",
+        "picocolors": "^1.0.0",
         "simple-git": "^3.19.1"
-    },
-    "pkg": {
-        "options": [
-            "experimental-modules"
-        ]
     }
 }
