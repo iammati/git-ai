@@ -21,8 +21,6 @@ export const gitAi = async (diff: string) => {
         model: 'gpt-3.5-turbo',
     });
 
-    console.log(completion.choices);
-
     const msg = completion.choices[0].message.content + '\n\n';
     return msg;
 };

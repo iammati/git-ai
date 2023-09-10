@@ -4,4 +4,4 @@ import { retrieveUnstagedChanges } from './git';
 const changes = await retrieveUnstagedChanges();
 const msg = await gitAi(changes);
 
-console.log(changes);
+console.log(msg);
