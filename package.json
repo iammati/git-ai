@@ -1,12 +1,12 @@
 {
     "name": "@iammati/git-ai",
     "description": "A simple CLI tool to generate commit messages using GPT-3",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "main": "build/index.js",
     "license": "MIT",
     "scripts": {
-        "build": "bun build ./src/index.ts --outdir ./build --target bun",
-        "publish": "npm run build && npm publish --access public"
+        "build": "bun build ./src/index.ts --outdir ./build --target bun && git add . && bun run build/index.js",
+        "publish": "npm publish --access public"
     },
     "bin": {
         "git-ai": "./build/index.js"
