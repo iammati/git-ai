@@ -1,0 +1,9 @@
+eol=lf
+
+app.*.js -diff
+app.*.css -diff
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.webp binary
