@@ -22,7 +22,7 @@ npm install -g @iammati/git-ai
 Just run the `git-ai` command in a Git repository where you added files into your staged-area and want to summarize a commit message for:
 
 ```bash
-git-ai
+OPENAI_API_KEY=MY_AWESOME_KEY git-ai
 ```
 
 Copy n paste the response into your commit message and you're done!
