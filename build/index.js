@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 // @bun
 var __create = Object.create;
 var __defProp = Object.defineProperty;
