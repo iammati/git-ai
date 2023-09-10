@@ -1,7 +1,7 @@
 {
     "name": "@iammati/git-ai",
     "description": "A simple CLI tool to generate commit messages using GPT-3",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "main": "build/index.js",
     "license": "MIT",
     "scripts": {
