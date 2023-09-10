@@ -3,9 +3,12 @@ const pc = require('picocolors');
 const dotenv = require('dotenv');
 const OpenAI = require('openai');
 
-dotenv.config();
+// .env stuff
+const { NODE_ENV } = process.env;
+dotenv.config({ path: `.env${NODE_ENV ? '.' + NODE_ENV : ''}` });
 const { OPENAI_API_KEY } = process.env;
 
+// Logging
 const prefix = '[ git-ai ]';
 
 const log = msg => {
@@ -16,10 +19,12 @@ const error = msg => {
     console.log(`${pc.red(prefix)} ${pc.red(msg)}`);
 };
 
+// Validating key
 if ((OPENAI_API_KEY ?? '').length === 0) {
     return error('`OPENAI_API_KEY` environment variable is not set');
 }
 
+// Actual magic
 (async () => {
     const diffSummary = await simpleGit.diffSummary();
 
@@ -56,18 +61,17 @@ if ((OPENAI_API_KEY ?? '').length === 0) {
         gptMsg += `Diff content for file: ${filePath}:\n\n${diff}\n`;
     }
 
-    const intro = `Take this as a template for the git diffs you are about to receive after the template:
-
+    const intro = `Summarize my changes I'll provide you with. Use the following format of conventional-commits:
 "<type>(optional scope): <Short description, up to 80 chars>
-
-Longer body/description, if necessary. Wrap it to 80 chars as well.
+\n
+Longer body/description. Hard-Wrap it to max. 80 chars per line. Be specific but not too detail-rich. Be descriptive.
 Use the imperative, present tense: "change" not "changed" nor "changes".
 Don't capitalize first letter of the description.
 No dot (.) at the end.
 
-You may split descriptions with different meanings in-between with new-lines.
-DO NOT PUT ACTUAL GIT DIFF CONTENT INTO THE GIT COMMIT MESSAGE, INSTEAD LIST CHANGES IN THE BODY.
-DO NOT WRITE MULTIPLE <type>'s, DO NOT EXPLAIN WHY A COMMIT WAS MADE. THAT IS WHAT GIT DIFF IS FOR."`;
+"
+
+Flush the diff from your response. I do not want to see it.`;
     const content = intro + '\n\n' + gptMsg;
 
     const openai = new OpenAI({
@@ -75,9 +79,10 @@ DO NOT WRITE MULTIPLE <type>'s, DO NOT EXPLAIN WHY A COMMIT WAS MADE. THAT IS WH
     });
 
     const completion = await openai.chat.completions.create({
-        messages: [{ role: 'assistant', content: content, }],
+        messages: [{ role: 'user', content: content, }],
         model: 'gpt-3.5-turbo',
     });
 
-    console.log(completion.choices);
+    const msg = completion.choices[0].message.content + '\n\n';
+    console.log(msg);
 })();

@@ -1,5 +1,12 @@
 {
     "name": "@iammati/git-ai",
+    "description": "A simple CLI tool to generate commit messages using GPT-3",
+    "version": "0.1.0",
+    "main": "index.js",
+    "license": "MIT",
+    "bin": {
+        "git-ai": "./index.js"
+    },
     "author": {
         "name": "Mati",
         "email": "mati_01@icloud.com",
