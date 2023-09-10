@@ -1,5 +1,7 @@
 eol=lf
 
+build/index.js -diff
+
 app.*.js -diff
 app.*.css -diff
 
