@@ -9,20 +9,28 @@ I was lazy going through all my changes everytime and pull something together fo
 
 ## Requirements
 
-You need a OpenAI API Key to use this tool. You can get one [here](https://platform.openai.com/account/api-keys).
+You need a OpenAI API Key to use this tool. You can get one [here](https://platform.openai.com/account/api-keys). In addition to run git-ai you'll also need [bun.sh](https://bun.sh).
+
+
 
 ## Installation
 
 ```bash
-npm install -g @iammati/git-ai
+bun install @iammati/git-ai -g
 ```
 
 ## Usage
 
-Just run the `git-ai` command in a Git repository where you added files into your staged-area and want to summarize a commit message for:
+Run the `git-ai` command inside a Git repository project where you added files into your staged-area (using `git add <file>`) and need a summary of a commit message for:
 
 ```bash
 OPENAI_API_KEY=MY_AWESOME_KEY git-ai
 ```
 
-Copy n paste the response into your commit message and you're done!
+(As alternative you can also use a `.env[.local]` file to place your key in there which is obviously better since you don't have it in your shell history on the machine.)
+
+Copy 'n paste the response into your commit message and you're done!
+
+## License
+
+MIT
