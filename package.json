@@ -1,24 +1,26 @@
 {
-    "name": "@iammati/git-ai",
-    "description": "A simple CLI tool to generate commit messages using GPT-3",
-    "version": "0.4.3",
-    "main": "build/index.js",
-    "license": "MIT",
-    "scripts": {
-        "build": "bun build ./src/index.ts --outdir ./build --target bun && git add . && bun run build/index.js"
-    },
-    "bin": {
-        "git-ai": "./build/index.js"
-    },
-    "author": {
-        "name": "Mati",
-        "email": "mati_01@icloud.com",
-        "url": "https://infraops.dev/products/git-ai"
-    },
-    "dependencies": {
-        "dotenv": "^16.3.1",
-        "openai": "^4.6.0",
-        "picocolors": "^1.0.0",
-        "simple-git": "^3.19.1"
-    }
+  "name": "@iammati/git-ai",
+  "description": "A simple CLI tool to generate commit messages using GPT-3",
+  "version": "0.4.3",
+  "main": "build/index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "bun run ./src/index.ts",
+    "build": "bun build ./src/index.ts --outdir ./build --target bun && git add . && bun run build/index.js"
+  },
+  "bin": {
+    "git-ai": "./build/index.js"
+  },
+  "author": {
+    "name": "Mati",
+    "email": "mati_01@icloud.com",
+    "url": "https://infraops.dev/products/git-ai"
+  },
+  "dependencies": {
+    "bun-promptx": "^0.2.0",
+    "dotenv": "^16.3.1",
+    "openai": "^4.6.0",
+    "picocolors": "^1.0.0",
+    "simple-git": "^3.19.1"
+  }
 }

@@ -2,8 +2,12 @@
 
 import { gitAi } from './ai';
 import { retrieveUnstagedChanges } from './git';
+import { handleSelection } from './prompt';
 
-const changes = await retrieveUnstagedChanges();
-const msg = await gitAi(changes);
+const diff = await retrieveUnstagedChanges();
 
-console.log(msg);
+const msg = (async (diff: string) => {
+    const aiSuggestion = await gitAi(diff);
+
+    handleSelection(aiSuggestion);
+})(diff);
