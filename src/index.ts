@@ -1,13 +1,14 @@
 #!/usr/bin/env bun
 
+import simpleGit from 'simple-git';
 import { gitAi } from './ai';
 import { retrieveUnstagedChanges } from './git';
 import { handleSelection } from './prompt';
 
-const diff = await retrieveUnstagedChanges();
+const git = simpleGit();
 
-const msg = (async (diff: string) => {
+(async (diff: string) => {
     const aiSuggestion = await gitAi(diff);
 
-    handleSelection(aiSuggestion);
-})(diff);
+    handleSelection(git, aiSuggestion);
+})(await retrieveUnstagedChanges(git));

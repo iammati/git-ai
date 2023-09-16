@@ -1,7 +1,5 @@
-import { simpleGit } from 'simple-git';
+import { SimpleGit } from 'simple-git';
 import { errorExit } from './logger';
-
-const git = simpleGit();
 
 const ignoredFiles = [
     'bun.lockb',
@@ -11,7 +9,7 @@ const ignoredFiles = [
     'composer.lock',
 ].map(filename => `:!${filename}`);
 
-export const retrieveUnstagedChanges = async (): Promise<string|never> => {
+export const retrieveUnstagedChanges = async (git: SimpleGit): Promise<string|never> => {
     const diff = await git.diff(['--staged', '--', ...ignoredFiles]);
 
     if (diff.length === 0) {
@@ -23,5 +21,3 @@ export const retrieveUnstagedChanges = async (): Promise<string|never> => {
 
     return diff;
 };
-
-export default git;

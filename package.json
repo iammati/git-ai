@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "start": "bun run ./src/index.ts",
-    "build": "bun build ./src/index.ts --outdir ./build --target bun && git add . && bun run build/index.js"
+    "production": "bun build ./src/index.ts --outdir ./build --target bun && git add . && bun run build/index.js"
   },
   "bin": {
     "git-ai": "./build/index.js"
