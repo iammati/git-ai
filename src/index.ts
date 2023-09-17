@@ -10,5 +10,5 @@ const git = simpleGit();
 (async (diff: string) => {
     const aiSuggestion = await gitAi(diff);
 
-    handleSelection(git, aiSuggestion);
+    await handleSelection(git, aiSuggestion);
 })(await retrieveUnstagedChanges(git));

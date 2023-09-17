@@ -1,10 +1,9 @@
-import { spawnSync } from 'child_process';
-import { SelectionItem, createSelection } from 'bun-promptx';
-import { error, errorExit, log } from './logger';
 import crypto from 'crypto';
-import simpleGit, { SimpleGit } from 'simple-git';
 import fs from 'fs';
-import path from 'path';
+import { SelectionItem, createSelection } from 'bun-promptx';
+import { errorExit, log } from './logger';
+import { SimpleGit } from 'simple-git';
+import pc from 'picocolors';
 
 const options: SelectionItem[] = [
     {
@@ -26,35 +25,37 @@ const promptSelection = (suggestion: string): number | null => {
     return createSelection(options).selectedIndex;
 };
 
-export const handleSelection = (git: SimpleGit, suggestion: string) => {
+export const handleSelection = async (git: SimpleGit, suggestion: string, x: number = 0) => {
     const index = promptSelection(suggestion);
 
     switch (index) {
         case 0:
             const randomFilename = crypto.randomBytes(8).toString('hex');
-            const filename = path.join('/tmp', `${randomFilename}.txt`);
+            const filename = `/tmp/${randomFilename}`;
             fs.writeFileSync(filename, suggestion);
 
-            const editorCommand = process.env.EDITOR || 'nano';
-            const editorProcess = spawnSync(editorCommand, [filename], {
-                stdio: 'inherit',
+            Bun.spawn(['nano', filename], {
+                stdin: 'inherit',
+                stdout: 'inherit',
+                stderr: 'inherit',
+                onExit: (...e) => {
+                    const modifiedSuggestion = fs.readFileSync(filename, 'utf-8');
+                    if (modifiedSuggestion !== suggestion) {
+                        log('Committing with modified message: ', pc.yellow(modifiedSuggestion));
+                    } else {
+                        log('Committing with message: ', pc.cyan(modifiedSuggestion));
+                    }
+
+                    fs.unlinkSync(filename);
+                    git.commit(modifiedSuggestion);
+                },
             });
-
-            if (editorProcess.error) {
-                error('Error opening the text editor:');
-                return errorExit(editorProcess.error);
-            }
-
-            const modifiedSuggestion = fs.readFileSync(filename, 'utf-8');
-            fs.unlinkSync(filename);
-
-            git.commit(modifiedSuggestion);
-            log('Committed with message:', modifiedSuggestion);
-
             break;
         case 1:
-            log('Running again...');
-            handleSelection(git, suggestion);
+            console.clear();
+            const counter = x > 0 ? pc.yellow(` (x${x + 1})`) : '';
+            log(`Running again...${counter}`);
+            await handleSelection(git, suggestion, x + 1);
             break;
         case 2:
             errorExit('Aborted.');

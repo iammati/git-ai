@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "start": "bun run ./src/index.ts",
-    "production": "bun build ./src/index.ts --outdir ./build --target bun && git add . && bun run build/index.js"
+    "production": "bun build ./src/index.ts --outdir ./build --target node"
   },
   "bin": {
     "git-ai": "./build/index.js"
@@ -22,5 +22,8 @@
     "openai": "^4.6.0",
     "picocolors": "^1.0.0",
     "simple-git": "^3.19.1"
+  },
+  "devDependencies": {
+    "bun-types": "^1.0.2"
   }
 }

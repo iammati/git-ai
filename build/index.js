@@ -21,342 +21,6 @@ var __require = (id) => {
   return import.meta.require(id);
 };
 
-// node_modules/.pnpm/dotenv@16.3.1/node_modules/dotenv/package.json
-var require_package = __commonJS((exports, module) => {
-  module.exports = {
-    name: "dotenv",
-    version: "16.3.1",
-    description: "Loads environment variables from .env file",
-    main: "lib/main.js",
-    types: "lib/main.d.ts",
-    exports: {
-      ".": {
-        types: "./lib/main.d.ts",
-        require: "./lib/main.js",
-        default: "./lib/main.js"
-      },
-      "./config": "./config.js",
-      "./config.js": "./config.js",
-      "./lib/env-options": "./lib/env-options.js",
-      "./lib/env-options.js": "./lib/env-options.js",
-      "./lib/cli-options": "./lib/cli-options.js",
-      "./lib/cli-options.js": "./lib/cli-options.js",
-      "./package.json": "./package.json"
-    },
-    scripts: {
-      "dts-check": "tsc --project tests/types/tsconfig.json",
-      lint: "standard",
-      "lint-readme": "standard-markdown",
-      pretest: "npm run lint && npm run dts-check",
-      test: "tap tests/*.js --100 -Rspec",
-      prerelease: "npm test",
-      release: "standard-version"
-    },
-    repository: {
-      type: "git",
-      url: "git://github.com/motdotla/dotenv.git"
-    },
-    funding: "https://github.com/motdotla/dotenv?sponsor=1",
-    keywords: [
-      "dotenv",
-      "env",
-      ".env",
-      "environment",
-      "variables",
-      "config",
-      "settings"
-    ],
-    readmeFilename: "README.md",
-    license: "BSD-2-Clause",
-    devDependencies: {
-      "@definitelytyped/dtslint": "^0.0.133",
-      "@types/node": "^18.11.3",
-      decache: "^4.6.1",
-      sinon: "^14.0.1",
-      standard: "^17.0.0",
-      "standard-markdown": "^7.1.0",
-      "standard-version": "^9.5.0",
-      tap: "^16.3.0",
-      tar: "^6.1.11",
-      typescript: "^4.8.4"
-    },
-    engines: {
-      node: ">=12"
-    },
-    browser: {
-      fs: false
-    }
-  };
-});
-
-// /home/dev/projects/git-ai/node_modules/dotenv/lib/main.js
-var require_main = __commonJS((exports, module) => {
-  var parse = function(src) {
-    const obj = {};
-    let lines = src.toString();
-    lines = lines.replace(/\r\n?/mg, "\n");
-    let match;
-    while ((match = LINE.exec(lines)) != null) {
-      const key = match[1];
-      let value = match[2] || "";
-      value = value.trim();
-      const maybeQuote = value[0];
-      value = value.replace(/^(['"`])([\s\S]*)\1$/mg, "$2");
-      if (maybeQuote === '"') {
-        value = value.replace(/\\n/g, "\n");
-        value = value.replace(/\\r/g, "\r");
-      }
-      obj[key] = value;
-    }
-    return obj;
-  };
-  var _parseVault = function(options) {
-    const vaultPath = _vaultPath(options);
-    const result = DotenvModule.configDotenv({ path: vaultPath });
-    if (!result.parsed) {
-      throw new Error(`MISSING_DATA: Cannot parse ${vaultPath} for an unknown reason`);
-    }
-    const keys = _dotenvKey(options).split(",");
-    const length = keys.length;
-    let decrypted;
-    for (let i = 0;i < length; i++) {
-      try {
-        const key = keys[i].trim();
-        const attrs = _instructions(result, key);
-        decrypted = DotenvModule.decrypt(attrs.ciphertext, attrs.key);
-        break;
-      } catch (error3) {
-        if (i + 1 >= length) {
-          throw error3;
-        }
-      }
-    }
-    return DotenvModule.parse(decrypted);
-  };
-  var _log = function(message) {
-    console.log(`[dotenv@${version2}][INFO] ${message}`);
-  };
-  var _warn = function(message) {
-    console.log(`[dotenv@${version2}][WARN] ${message}`);
-  };
-  var _debug = function(message) {
-    console.log(`[dotenv@${version2}][DEBUG] ${message}`);
-  };
-  var _dotenvKey = function(options) {
-    if (options && options.DOTENV_KEY && options.DOTENV_KEY.length > 0) {
-      return options.DOTENV_KEY;
-    }
-    if (process.env.DOTENV_KEY && process.env.DOTENV_KEY.length > 0) {
-      return process.env.DOTENV_KEY;
-    }
-    return "";
-  };
-  var _instructions = function(result, dotenvKey) {
-    let uri;
-    try {
-      uri = new URL(dotenvKey);
-    } catch (error3) {
-      if (error3.code === "ERR_INVALID_URL") {
-        throw new Error("INVALID_DOTENV_KEY: Wrong format. Must be in valid uri format like dotenv://:key_1234@dotenv.org/vault/.env.vault?environment=development");
-      }
-      throw error3;
-    }
-    const key = uri.password;
-    if (!key) {
-      throw new Error("INVALID_DOTENV_KEY: Missing key part");
-    }
-    const environment = uri.searchParams.get("environment");
-    if (!environment) {
-      throw new Error("INVALID_DOTENV_KEY: Missing environment part");
-    }
-    const environmentKey = `DOTENV_VAULT_${environment.toUpperCase()}`;
-    const ciphertext = result.parsed[environmentKey];
-    if (!ciphertext) {
-      throw new Error(`NOT_FOUND_DOTENV_ENVIRONMENT: Cannot locate environment ${environmentKey} in your .env.vault file.`);
-    }
-    return { ciphertext, key };
-  };
-  var _vaultPath = function(options) {
-    let dotenvPath = path.resolve(process.cwd(), ".env");
-    if (options && options.path && options.path.length > 0) {
-      dotenvPath = options.path;
-    }
-    return dotenvPath.endsWith(".vault") ? dotenvPath : `${dotenvPath}.vault`;
-  };
-  var _resolveHome = function(envPath) {
-    return envPath[0] === "~" ? path.join(os.homedir(), envPath.slice(1)) : envPath;
-  };
-  var _configVault = function(options) {
-    _log("Loading env from encrypted .env.vault");
-    const parsed = DotenvModule._parseVault(options);
-    let processEnv = process.env;
-    if (options && options.processEnv != null) {
-      processEnv = options.processEnv;
-    }
-    DotenvModule.populate(processEnv, parsed, options);
-    return { parsed };
-  };
-  var configDotenv = function(options) {
-    let dotenvPath = path.resolve(process.cwd(), ".env");
-    let encoding = "utf8";
-    const debug2 = Boolean(options && options.debug);
-    if (options) {
-      if (options.path != null) {
-        dotenvPath = _resolveHome(options.path);
-      }
-      if (options.encoding != null) {
-        encoding = options.encoding;
-      }
-    }
-    try {
-      const parsed = DotenvModule.parse(fs.readFileSync(dotenvPath, { encoding }));
-      let processEnv = process.env;
-      if (options && options.processEnv != null) {
-        processEnv = options.processEnv;
-      }
-      DotenvModule.populate(processEnv, parsed, options);
-      return { parsed };
-    } catch (e) {
-      if (debug2) {
-        _debug(`Failed to load ${dotenvPath} ${e.message}`);
-      }
-      return { error: e };
-    }
-  };
-  var config = function(options) {
-    const vaultPath = _vaultPath(options);
-    if (_dotenvKey(options).length === 0) {
-      return DotenvModule.configDotenv(options);
-    }
-    if (!fs.existsSync(vaultPath)) {
-      _warn(`You set DOTENV_KEY but you are missing a .env.vault file at ${vaultPath}. Did you forget to build it?`);
-      return DotenvModule.configDotenv(options);
-    }
-    return DotenvModule._configVault(options);
-  };
-  var decrypt = function(encrypted, keyStr) {
-    const key = Buffer.from(keyStr.slice(-64), "hex");
-    let ciphertext = Buffer.from(encrypted, "base64");
-    const nonce = ciphertext.slice(0, 12);
-    const authTag = ciphertext.slice(-16);
-    ciphertext = ciphertext.slice(12, -16);
-    try {
-      const aesgcm = crypto.createDecipheriv("aes-256-gcm", key, nonce);
-      aesgcm.setAuthTag(authTag);
-      return `${aesgcm.update(ciphertext)}${aesgcm.final()}`;
-    } catch (error3) {
-      const isRange = error3 instanceof RangeError;
-      const invalidKeyLength = error3.message === "Invalid key length";
-      const decryptionFailed = error3.message === "Unsupported state or unable to authenticate data";
-      if (isRange || invalidKeyLength) {
-        const msg = "INVALID_DOTENV_KEY: It must be 64 characters long (or more)";
-        throw new Error(msg);
-      } else if (decryptionFailed) {
-        const msg = "DECRYPTION_FAILED: Please check your DOTENV_KEY";
-        throw new Error(msg);
-      } else {
-        console.error("Error: ", error3.code);
-        console.error("Error: ", error3.message);
-        throw error3;
-      }
-    }
-  };
-  var populate = function(processEnv, parsed, options = {}) {
-    const debug2 = Boolean(options && options.debug);
-    const override = Boolean(options && options.override);
-    if (typeof parsed !== "object") {
-      throw new Error("OBJECT_REQUIRED: Please check the processEnv argument being passed to populate");
-    }
-    for (const key of Object.keys(parsed)) {
-      if (Object.prototype.hasOwnProperty.call(processEnv, key)) {
-        if (override === true) {
-          processEnv[key] = parsed[key];
-        }
-        if (debug2) {
-          if (override === true) {
-            _debug(`"${key}" is already defined and WAS overwritten`);
-          } else {
-            _debug(`"${key}" is already defined and was NOT overwritten`);
-          }
-        }
-      } else {
-        processEnv[key] = parsed[key];
-      }
-    }
-  };
-  var fs = import.meta.require("fs");
-  var path = import.meta.require("path");
-  var os = import.meta.require("os");
-  var crypto = import.meta.require("crypto");
-  var packageJson = require_package();
-  var version2 = packageJson.version;
-  var LINE = /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/mg;
-  var DotenvModule = {
-    configDotenv,
-    _configVault,
-    _parseVault,
-    config,
-    decrypt,
-    parse,
-    populate
-  };
-  exports.configDotenv = DotenvModule.configDotenv;
-  exports._configVault = DotenvModule._configVault;
-  exports._parseVault = DotenvModule._parseVault;
-  exports.config = DotenvModule.config;
-  exports.decrypt = DotenvModule.decrypt;
-  exports.parse = DotenvModule.parse;
-  exports.populate = DotenvModule.populate;
-  module.exports = DotenvModule;
-});
-
-// /home/dev/projects/git-ai/node_modules/picocolors/picocolors.js
-var require_picocolors = __commonJS((exports, module) => {
-  var tty = import.meta.require("tty");
-  var isColorSupported = !(("NO_COLOR" in process.env) || process.argv.includes("--no-color")) && (("FORCE_COLOR" in process.env) || process.argv.includes("--color") || process.platform === "win32" || tty.isatty(1) && true || ("CI" in process.env));
-  var formatter = (open, close, replace = open) => (input) => {
-    let string = "" + input;
-    let index = string.indexOf(close, open.length);
-    return ~index ? open + replaceClose(string, close, replace, index) + close : open + string + close;
-  };
-  var replaceClose = (string, close, replace, index) => {
-    let start = string.substring(0, index) + replace;
-    let end = string.substring(index + close.length);
-    let nextIndex = end.indexOf(close);
-    return ~nextIndex ? start + replaceClose(end, close, replace, nextIndex) : start + end;
-  };
-  var createColors = (enabled = isColorSupported) => ({
-    isColorSupported: enabled,
-    reset: enabled ? (s) => `\x1B[0m${s}\x1B[0m` : String,
-    bold: enabled ? formatter("\x1B[1m", "\x1B[22m", "\x1B[22m\x1B[1m") : String,
-    dim: enabled ? formatter("\x1B[2m", "\x1B[22m", "\x1B[22m\x1B[2m") : String,
-    italic: enabled ? formatter("\x1B[3m", "\x1B[23m") : String,
-    underline: enabled ? formatter("\x1B[4m", "\x1B[24m") : String,
-    inverse: enabled ? formatter("\x1B[7m", "\x1B[27m") : String,
-    hidden: enabled ? formatter("\x1B[8m", "\x1B[28m") : String,
-    strikethrough: enabled ? formatter("\x1B[9m", "\x1B[29m") : String,
-    black: enabled ? formatter("\x1B[30m", "\x1B[39m") : String,
-    red: enabled ? formatter("\x1B[31m", "\x1B[39m") : String,
-    green: enabled ? formatter("\x1B[32m", "\x1B[39m") : String,
-    yellow: enabled ? formatter("\x1B[33m", "\x1B[39m") : String,
-    blue: enabled ? formatter("\x1B[34m", "\x1B[39m") : String,
-    magenta: enabled ? formatter("\x1B[35m", "\x1B[39m") : String,
-    cyan: enabled ? formatter("\x1B[36m", "\x1B[39m") : String,
-    white: enabled ? formatter("\x1B[37m", "\x1B[39m") : String,
-    gray: enabled ? formatter("\x1B[90m", "\x1B[39m") : String,
-    bgBlack: enabled ? formatter("\x1B[40m", "\x1B[49m") : String,
-    bgRed: enabled ? formatter("\x1B[41m", "\x1B[49m") : String,
-    bgGreen: enabled ? formatter("\x1B[42m", "\x1B[49m") : String,
-    bgYellow: enabled ? formatter("\x1B[43m", "\x1B[49m") : String,
-    bgBlue: enabled ? formatter("\x1B[44m", "\x1B[49m") : String,
-    bgMagenta: enabled ? formatter("\x1B[45m", "\x1B[49m") : String,
-    bgCyan: enabled ? formatter("\x1B[46m", "\x1B[49m") : String,
-    bgWhite: enabled ? formatter("\x1B[47m", "\x1B[49m") : String
-  });
-  module.exports = createColors();
-  module.exports.createColors = createColors;
-});
-
 // /home/dev/projects/git-ai/node_modules/.pnpm/debug@4.3.4/node_modules/ms/index.js
 var require_ms = __commonJS((exports, module) => {
   var parse = function(str) {
@@ -478,8 +142,8 @@ var require_common = __commonJS((exports, module) => {
     createDebug.enabled = enabled;
     createDebug.humanize = require_ms();
     createDebug.destroy = destroy;
-    Object.keys(env).forEach((key2) => {
-      createDebug[key2] = env[key2];
+    Object.keys(env).forEach((key) => {
+      createDebug[key] = env[key];
     });
     createDebug.names = [];
     createDebug.skips = [];
@@ -498,11 +162,11 @@ var require_common = __commonJS((exports, module) => {
       let enableOverride = null;
       let namespacesCache;
       let enabledCache;
-      function debug2(...args) {
-        if (!debug2.enabled) {
+      function debug(...args) {
+        if (!debug.enabled) {
           return;
         }
-        const self = debug2;
+        const self = debug;
         const curr = Number(new Date);
         const ms = curr - (prevTime || curr);
         self.diff = ms;
@@ -532,12 +196,12 @@ var require_common = __commonJS((exports, module) => {
         const logFn = self.log || createDebug.log;
         logFn.apply(self, args);
       }
-      debug2.namespace = namespace;
-      debug2.useColors = createDebug.useColors();
-      debug2.color = createDebug.selectColor(namespace);
-      debug2.extend = extend;
-      debug2.destroy = createDebug.destroy;
-      Object.defineProperty(debug2, "enabled", {
+      debug.namespace = namespace;
+      debug.useColors = createDebug.useColors();
+      debug.color = createDebug.selectColor(namespace);
+      debug.extend = extend;
+      debug.destroy = createDebug.destroy;
+      Object.defineProperty(debug, "enabled", {
         enumerable: true,
         configurable: false,
         get: () => {
@@ -555,9 +219,9 @@ var require_common = __commonJS((exports, module) => {
         }
       });
       if (typeof createDebug.init === "function") {
-        createDebug.init(debug2);
+        createDebug.init(debug);
       }
-      return debug2;
+      return debug;
     }
     function extend(namespace, delimiter) {
       const newDebug = createDebug(this.namespace + (typeof delimiter === "undefined" ? ":" : delimiter) + namespace);
@@ -666,14 +330,14 @@ var require_browser = __commonJS((exports, module) => {
       } else {
         exports.storage.removeItem("debug");
       }
-    } catch (error4) {
+    } catch (error) {
     }
   };
   var load = function() {
     let r;
     try {
       r = exports.storage.getItem("debug");
-    } catch (error4) {
+    } catch (error) {
     }
     if (!r && typeof process !== "undefined" && ("env" in process)) {
       r = process.env.DEBUG;
@@ -683,7 +347,7 @@ var require_browser = __commonJS((exports, module) => {
   var localstorage = function() {
     try {
       return localStorage;
-    } catch (error4) {
+    } catch (error) {
     }
   };
   exports.formatArgs = formatArgs;
@@ -785,8 +449,8 @@ var require_browser = __commonJS((exports, module) => {
   formatters.j = function(v) {
     try {
       return JSON.stringify(v);
-    } catch (error4) {
-      return "[UnexpectedJSONParseError]: " + error4.message;
+    } catch (error) {
+      return "[UnexpectedJSONParseError]: " + error.message;
     }
   };
 });
@@ -801,8 +465,8 @@ var require_node = __commonJS((exports, module) => {
     if (useColors2) {
       const c = this.color;
       const colorCode = "\x1B[3" + (c < 8 ? c : "8;5;" + c);
-      const prefix2 = `  ${colorCode};1m${name} \x1B[0m`;
-      args[0] = prefix2 + args[0].split("\n").join("\n" + prefix2);
+      const prefix = `  ${colorCode};1m${name} \x1B[0m`;
+      args[0] = prefix + args[0].split("\n").join("\n" + prefix);
       args.push(colorCode + "m+" + exports.humanize(this.diff) + "\x1B[0m");
     } else {
       args[0] = getDate() + name + " " + args[0];
@@ -827,11 +491,11 @@ var require_node = __commonJS((exports, module) => {
   var load = function() {
     return process.env.DEBUG;
   };
-  var init = function(debug2) {
-    debug2.inspectOpts = {};
+  var init = function(debug) {
+    debug.inspectOpts = {};
     const keys = Object.keys(exports.inspectOpts);
     for (let i = 0;i < keys.length; i++) {
-      debug2.inspectOpts[keys[i]] = exports.inspectOpts[keys[i]];
+      debug.inspectOpts[keys[i]] = exports.inspectOpts[keys[i]];
     }
   };
   var tty = import.meta.require("tty");
@@ -927,15 +591,15 @@ var require_node = __commonJS((exports, module) => {
         221
       ];
     }
-  } catch (error4) {
+  } catch (error) {
   }
-  exports.inspectOpts = Object.keys(process.env).filter((key2) => {
-    return /^debug_/i.test(key2);
-  }).reduce((obj, key2) => {
-    const prop = key2.substring(6).toLowerCase().replace(/_([a-z])/g, (_, k) => {
+  exports.inspectOpts = Object.keys(process.env).filter((key) => {
+    return /^debug_/i.test(key);
+  }).reduce((obj, key) => {
+    const prop = key.substring(6).toLowerCase().replace(/_([a-z])/g, (_, k) => {
       return k.toUpperCase();
     });
-    let val = process.env[key2];
+    let val = process.env[key];
     if (/^(yes|on|true|enabled)$/i.test(val)) {
       val = true;
     } else if (/^(no|off|false|disabled)$/i.test(val)) {
@@ -1039,10 +703,10 @@ var require_dist2 = __commonJS((exports) => {
           done(result);
         }
       },
-      fail(error4) {
+      fail(error) {
         if (status === "pending") {
           status = "rejected";
-          fail(error4);
+          fail(error);
         }
       },
       get fulfilled() {
@@ -1060,1459 +724,52 @@ var require_dist2 = __commonJS((exports) => {
   exports.default = deferred;
 });
 
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/version.mjs
-var VERSION = "4.6.0";
-
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/streaming.mjs
-var partition = function(str, delimiter) {
-  const index = str.indexOf(delimiter);
-  if (index !== -1) {
-    return [str.substring(0, index), delimiter, str.substring(index + delimiter.length)];
-  }
-  return [str, "", ""];
-};
-var readableStreamAsyncIterable = function(stream) {
-  if (stream[Symbol.asyncIterator])
-    return stream;
-  const reader = stream.getReader();
-  return {
-    async next() {
-      try {
-        const result = await reader.read();
-        if (result === null || result === undefined ? undefined : result.done)
-          reader.releaseLock();
-        return result;
-      } catch (e) {
-        reader.releaseLock();
-        throw e;
-      }
-    },
-    async return() {
-      const cancelPromise = reader.cancel();
-      reader.releaseLock();
-      await cancelPromise;
-      return { done: true, value: undefined };
-    },
-    [Symbol.asyncIterator]() {
-      return this;
-    }
+// /home/dev/projects/git-ai/node_modules/picocolors/picocolors.js
+var require_picocolors = __commonJS((exports, module) => {
+  var tty = import.meta.require("tty");
+  var isColorSupported = !(("NO_COLOR" in process.env) || process.argv.includes("--no-color")) && (("FORCE_COLOR" in process.env) || process.argv.includes("--color") || process.platform === "win32" || tty.isatty(1) && true || ("CI" in process.env));
+  var formatter = (open, close, replace = open) => (input) => {
+    let string = "" + input;
+    let index = string.indexOf(close, open.length);
+    return ~index ? open + replaceClose(string, close, replace, index) + close : open + string + close;
   };
-};
-
-class Stream {
-  constructor(response, controller) {
-    this.response = response;
-    this.controller = controller;
-    this.decoder = new SSEDecoder;
-  }
-  async* iterMessages() {
-    if (!this.response.body) {
-      this.controller.abort();
-      throw new Error(`Attempted to iterate over a response with no body`);
-    }
-    const lineDecoder = new LineDecoder;
-    const iter = readableStreamAsyncIterable(this.response.body);
-    for await (const chunk of iter) {
-      for (const line of lineDecoder.decode(chunk)) {
-        const sse = this.decoder.decode(line);
-        if (sse)
-          yield sse;
-      }
-    }
-    for (const line of lineDecoder.flush()) {
-      const sse = this.decoder.decode(line);
-      if (sse)
-        yield sse;
-    }
-  }
-  async* [Symbol.asyncIterator]() {
-    let done = false;
-    try {
-      for await (const sse of this.iterMessages()) {
-        if (done)
-          continue;
-        if (sse.data.startsWith("[DONE]")) {
-          done = true;
-          continue;
-        }
-        if (sse.event === null) {
-          try {
-            yield JSON.parse(sse.data);
-          } catch (e) {
-            console.error(`Could not parse message into JSON:`, sse.data);
-            console.error(`From chunk:`, sse.raw);
-            throw e;
-          }
-        }
-      }
-      done = true;
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError")
-        return;
-      throw e;
-    } finally {
-      if (!done)
-        this.controller.abort();
-    }
-  }
-}
-
-class SSEDecoder {
-  constructor() {
-    this.event = null;
-    this.data = [];
-    this.chunks = [];
-  }
-  decode(line) {
-    if (line.endsWith("\r")) {
-      line = line.substring(0, line.length - 1);
-    }
-    if (!line) {
-      if (!this.event && !this.data.length)
-        return null;
-      const sse = {
-        event: this.event,
-        data: this.data.join("\n"),
-        raw: this.chunks
-      };
-      this.event = null;
-      this.data = [];
-      this.chunks = [];
-      return sse;
-    }
-    this.chunks.push(line);
-    if (line.startsWith(":")) {
-      return null;
-    }
-    let [fieldname, _, value] = partition(line, ":");
-    if (value.startsWith(" ")) {
-      value = value.substring(1);
-    }
-    if (fieldname === "event") {
-      this.event = value;
-    } else if (fieldname === "data") {
-      this.data.push(value);
-    }
-    return null;
-  }
-}
-
-class LineDecoder {
-  constructor() {
-    this.buffer = [];
-    this.trailingCR = false;
-  }
-  decode(chunk) {
-    let text = this.decodeText(chunk);
-    if (this.trailingCR) {
-      text = "\r" + text;
-      this.trailingCR = false;
-    }
-    if (text.endsWith("\r")) {
-      this.trailingCR = true;
-      text = text.slice(0, -1);
-    }
-    if (!text) {
-      return [];
-    }
-    const trailingNewline = LineDecoder.NEWLINE_CHARS.has(text[text.length - 1] || "");
-    let lines = text.split(LineDecoder.NEWLINE_REGEXP);
-    if (lines.length === 1 && !trailingNewline) {
-      this.buffer.push(lines[0]);
-      return [];
-    }
-    if (this.buffer.length > 0) {
-      lines = [this.buffer.join("") + lines[0], ...lines.slice(1)];
-      this.buffer = [];
-    }
-    if (!trailingNewline) {
-      this.buffer = [lines.pop() || ""];
-    }
-    return lines;
-  }
-  decodeText(bytes) {
-    var _a;
-    if (bytes == null)
-      return "";
-    if (typeof bytes === "string")
-      return bytes;
-    if (typeof Buffer !== "undefined") {
-      if (bytes instanceof Buffer) {
-        return bytes.toString();
-      }
-      if (bytes instanceof Uint8Array) {
-        return Buffer.from(bytes).toString();
-      }
-      throw new Error(`Unexpected: received non-Uint8Array (${bytes.constructor.name}) stream chunk in an environment with a global "Buffer" defined, which this library assumes to be Node. Please report this error.`);
-    }
-    if (typeof TextDecoder !== "undefined") {
-      if (bytes instanceof Uint8Array || bytes instanceof ArrayBuffer) {
-        (_a = this.textDecoder) !== null && _a !== undefined || (this.textDecoder = new TextDecoder("utf8"));
-        return this.textDecoder.decode(bytes);
-      }
-      throw new Error(`Unexpected: received non-Uint8Array/ArrayBuffer (${bytes.constructor.name}) in a web platform. Please report this error.`);
-    }
-    throw new Error(`Unexpected: neither Buffer nor TextDecoder are available as globals. Please report this error.`);
-  }
-  flush() {
-    if (!this.buffer.length && !this.trailingCR) {
-      return [];
-    }
-    const lines = [this.buffer.join("")];
-    this.buffer = [];
-    this.trailingCR = false;
-    return lines;
-  }
-}
-LineDecoder.NEWLINE_CHARS = new Set(["\n", "\r", "\v", "\f", "\x1C", "\x1D", "\x1E", "\x85", "\u2028", "\u2029"]);
-LineDecoder.NEWLINE_REGEXP = /\r\n|[\n\r\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029]/g;
-
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/error.mjs
-class APIError extends Error {
-  constructor(status, error, message, headers) {
-    super(APIError.makeMessage(error, message));
-    this.status = status;
-    this.headers = headers;
-    const data = error;
-    this.error = data;
-    this.code = data === null || data === undefined ? undefined : data["code"];
-    this.param = data === null || data === undefined ? undefined : data["param"];
-    this.type = data === null || data === undefined ? undefined : data["type"];
-  }
-  static makeMessage(error, message) {
-    return (error === null || error === undefined ? undefined : error.message) ? typeof error.message === "string" ? error.message : JSON.stringify(error.message) : error ? JSON.stringify(error) : message || "Unknown error occurred";
-  }
-  static generate(status, errorResponse, message, headers) {
-    if (!status) {
-      return new APIConnectionError({ cause: castToError(errorResponse) });
-    }
-    const error = errorResponse === null || errorResponse === undefined ? undefined : errorResponse["error"];
-    if (status === 400) {
-      return new BadRequestError(status, error, message, headers);
-    }
-    if (status === 401) {
-      return new AuthenticationError(status, error, message, headers);
-    }
-    if (status === 403) {
-      return new PermissionDeniedError(status, error, message, headers);
-    }
-    if (status === 404) {
-      return new NotFoundError(status, error, message, headers);
-    }
-    if (status === 409) {
-      return new ConflictError(status, error, message, headers);
-    }
-    if (status === 422) {
-      return new UnprocessableEntityError(status, error, message, headers);
-    }
-    if (status === 429) {
-      return new RateLimitError(status, error, message, headers);
-    }
-    if (status >= 500) {
-      return new InternalServerError(status, error, message, headers);
-    }
-    return new APIError(status, error, message, headers);
-  }
-}
-
-class APIUserAbortError extends APIError {
-  constructor({ message } = {}) {
-    super(undefined, undefined, message || "Request was aborted.", undefined);
-    this.status = undefined;
-  }
-}
-
-class APIConnectionError extends APIError {
-  constructor({ message, cause }) {
-    super(undefined, undefined, message || "Connection error.", undefined);
-    this.status = undefined;
-    if (cause)
-      this.cause = cause;
-  }
-}
-
-class APIConnectionTimeoutError extends APIConnectionError {
-  constructor({ message } = {}) {
-    super({ message: message !== null && message !== undefined ? message : "Request timed out." });
-  }
-}
-
-class BadRequestError extends APIError {
-  constructor() {
-    super(...arguments);
-    this.status = 400;
-  }
-}
-
-class AuthenticationError extends APIError {
-  constructor() {
-    super(...arguments);
-    this.status = 401;
-  }
-}
-
-class PermissionDeniedError extends APIError {
-  constructor() {
-    super(...arguments);
-    this.status = 403;
-  }
-}
-
-class NotFoundError extends APIError {
-  constructor() {
-    super(...arguments);
-    this.status = 404;
-  }
-}
-
-class ConflictError extends APIError {
-  constructor() {
-    super(...arguments);
-    this.status = 409;
-  }
-}
-
-class UnprocessableEntityError extends APIError {
-  constructor() {
-    super(...arguments);
-    this.status = 422;
-  }
-}
-
-class RateLimitError extends APIError {
-  constructor() {
-    super(...arguments);
-    this.status = 429;
-  }
-}
-
-class InternalServerError extends APIError {
-}
-
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/_shims/agent.mjs
-var getDefaultAgent = (url) => {
-  return;
-};
-
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/_shims/fetch.mjs
-var _fetch = fetch.bind(undefined);
-var isPolyfilled = false;
-
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/_shims/form-data.mjs
-var _FormData = FormData;
-var _File = typeof File !== "undefined" ? File : class File2 extends Blob {
-  constructor() {
-    throw new Error(`file uploads aren't supported in this environment yet as 'File' is not defined`);
-  }
-};
-
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/_shims/getMultipartRequestOptions.mjs
-async function getMultipartRequestOptions(form, opts) {
-  return { ...opts, body: new MultipartBody(form) };
-}
-
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/_shims/fileFromPath.mjs
-async function fileFromPath() {
-  throw new Error("The `fileFromPath` function is only supported in Node. See the README for more details: https://www.github.com/openai/openai-node#file-uploads");
-}
-
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/_shims/node-readable.mjs
-function isFsReadStream(value) {
-  return false;
-}
-
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/uploads.mjs
-async function toFile(value, name, options = {}) {
-  var _a, _b, _c;
-  value = await value;
-  if (isResponseLike(value)) {
-    const blob = await value.blob();
-    name || (name = (_a = new URL(value.url).pathname.split(/[\\/]/).pop()) !== null && _a !== undefined ? _a : "unknown_file");
-    return new _File([blob], name, options);
-  }
-  const bits = await getBytes(value);
-  name || (name = (_b = getName(value)) !== null && _b !== undefined ? _b : "unknown_file");
-  if (!options.type) {
-    const type = (_c = bits[0]) === null || _c === undefined ? undefined : _c.type;
-    if (typeof type === "string") {
-      options = { ...options, type };
-    }
-  }
-  return new _File(bits, name, options);
-}
-async function getBytes(value) {
-  var _a;
-  let parts = [];
-  if (typeof value === "string" || ArrayBuffer.isView(value) || value instanceof ArrayBuffer) {
-    parts.push(value);
-  } else if (isBlobLike(value)) {
-    parts.push(await value.arrayBuffer());
-  } else if (isAsyncIterableIterator(value)) {
-    for await (const chunk of value) {
-      parts.push(chunk);
-    }
-  } else {
-    throw new Error(`Unexpected data type: ${typeof value}; constructor: ${(_a = value === null || value === undefined ? undefined : value.constructor) === null || _a === undefined ? undefined : _a.name}; props: ${propsForError(value)}`);
-  }
-  return parts;
-}
-var propsForError = function(value) {
-  const props = Object.getOwnPropertyNames(value);
-  return `[${props.map((p) => `"${p}"`).join(", ")}]`;
-};
-var getName = function(value) {
-  var _a;
-  return getStringFromMaybeBuffer(value.name) || getStringFromMaybeBuffer(value.filename) || ((_a = getStringFromMaybeBuffer(value.path)) === null || _a === undefined ? undefined : _a.split(/[\\/]/).pop());
-};
-var isResponseLike = (value) => value != null && typeof value === "object" && typeof value.url === "string" && typeof value.blob === "function";
-var isFileLike = (value) => value != null && typeof value === "object" && typeof value.name === "string" && typeof value.lastModified === "number" && isBlobLike(value);
-var isBlobLike = (value) => value != null && typeof value === "object" && typeof value.size === "number" && typeof value.type === "string" && typeof value.text === "function" && typeof value.slice === "function" && typeof value.arrayBuffer === "function";
-var isUploadable = (value) => {
-  return isFileLike(value) || isResponseLike(value) || isFsReadStream(value);
-};
-var getStringFromMaybeBuffer = (x) => {
-  if (typeof x === "string")
-    return x;
-  if (typeof Buffer !== "undefined" && x instanceof Buffer)
-    return String(x);
-  return;
-};
-var isAsyncIterableIterator = (value) => value != null && typeof value === "object" && typeof value[Symbol.asyncIterator] === "function";
-
-class MultipartBody {
-  constructor(body) {
-    this.body = body;
-  }
-  get [Symbol.toStringTag]() {
-    return "MultipartBody";
-  }
-}
-var isMultipartBody = (body) => body && typeof body === "object" && body.body && body[Symbol.toStringTag] === "MultipartBody";
-var multipartFormRequestOptions = async (opts) => {
-  const form = await createForm(opts.body);
-  return getMultipartRequestOptions(form, opts);
-};
-var createForm = async (body) => {
-  const form = new _FormData;
-  await Promise.all(Object.entries(body || {}).map(([key, value]) => addFormValue(form, key, value)));
-  return form;
-};
-var addFormValue = async (form, key, value) => {
-  if (value === undefined)
-    return;
-  if (value == null) {
-    throw new TypeError(`Received null for "${key}"; to pass null in FormData, you must use the string 'null'`);
-  }
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-    form.append(key, String(value));
-  } else if (isUploadable(value)) {
-    const file = await toFile(value);
-    form.append(key, file);
-  } else if (Array.isArray(value)) {
-    await Promise.all(value.map((entry) => addFormValue(form, key + "[]", entry)));
-  } else if (typeof value === "object") {
-    await Promise.all(Object.entries(value).map(([name, prop]) => addFormValue(form, `${key}[${name}]`, prop)));
-  } else {
-    throw new TypeError(`Invalid value given to form, expected a string, number, boolean, object, Array, File or Blob but got ${value} instead`);
-  }
-};
-
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/core.mjs
-async function defaultParseResponse(props) {
-  const { response } = props;
-  if (props.options.stream) {
-    return new Stream(response, props.controller);
-  }
-  const contentType = response.headers.get("content-type");
-  if (contentType === null || contentType === undefined ? undefined : contentType.includes("application/json")) {
-    const json = await response.json();
-    debug("response", response.status, response.url, response.headers, json);
-    return json;
-  }
-  const text = await response.text();
-  debug("response", response.status, response.url, response.headers, text);
-  return text;
-}
-var getBrowserInfo = function() {
-  if (typeof navigator === "undefined" || !navigator) {
-    return null;
-  }
-  const browserPatterns = [
-    { key: "edge", pattern: /Edge(?:\W+(\d+)\.(\d+)(?:\.(\d+))?)?/ },
-    { key: "ie", pattern: /MSIE(?:\W+(\d+)\.(\d+)(?:\.(\d+))?)?/ },
-    { key: "ie", pattern: /Trident(?:.*rv\:(\d+)\.(\d+)(?:\.(\d+))?)?/ },
-    { key: "chrome", pattern: /Chrome(?:\W+(\d+)\.(\d+)(?:\.(\d+))?)?/ },
-    { key: "firefox", pattern: /Firefox(?:\W+(\d+)\.(\d+)(?:\.(\d+))?)?/ },
-    { key: "safari", pattern: /(?:Version\W+(\d+)\.(\d+)(?:\.(\d+))?)?(?:\W+Mobile\S*)?\W+Safari/ }
-  ];
-  for (const { key, pattern } of browserPatterns) {
-    const match = pattern.exec(navigator.userAgent);
-    if (match) {
-      const major = match[1] || 0;
-      const minor = match[2] || 0;
-      const patch = match[3] || 0;
-      return { browser: key, version: `${major}.${minor}.${patch}` };
-    }
-  }
-  return null;
-};
-function isEmptyObj(obj) {
-  if (!obj)
-    return true;
-  for (const _k in obj)
-    return false;
-  return true;
-}
-function hasOwn(obj, key) {
-  return Object.prototype.hasOwnProperty.call(obj, key);
-}
-function debug(action, ...args) {
-  if (typeof process !== "undefined" && process.env["DEBUG"] === "true") {
-    console.log(`OpenAI:DEBUG:${action}`, ...args);
-  }
-}
-var __classPrivateFieldSet = function(receiver, state, value, kind, f) {
-  if (kind === "m")
-    throw new TypeError("Private method is not writable");
-  if (kind === "a" && !f)
-    throw new TypeError("Private accessor was defined without a setter");
-  if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver))
-    throw new TypeError("Cannot write private member to an object whose class did not declare it");
-  return kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value), value;
-};
-var __classPrivateFieldGet = function(receiver, state, kind, f) {
-  if (kind === "a" && !f)
-    throw new TypeError("Private accessor was defined without a getter");
-  if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver))
-    throw new TypeError("Cannot read private member from an object whose class did not declare it");
-  return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _AbstractPage_client;
-var MAX_RETRIES = 2;
-
-class APIPromise extends Promise {
-  constructor(responsePromise, parseResponse = defaultParseResponse) {
-    super((resolve) => {
-      resolve(null);
-    });
-    this.responsePromise = responsePromise;
-    this.parseResponse = parseResponse;
-  }
-  _thenUnwrap(transform) {
-    return new APIPromise(this.responsePromise, async (props) => transform(await this.parseResponse(props)));
-  }
-  asResponse() {
-    return this.responsePromise.then((p) => p.response);
-  }
-  async withResponse() {
-    const [data, response] = await Promise.all([this.parse(), this.asResponse()]);
-    return { data, response };
-  }
-  parse() {
-    if (!this.parsedPromise) {
-      this.parsedPromise = this.responsePromise.then(this.parseResponse);
-    }
-    return this.parsedPromise;
-  }
-  then(onfulfilled, onrejected) {
-    return this.parse().then(onfulfilled, onrejected);
-  }
-  catch(onrejected) {
-    return this.parse().catch(onrejected);
-  }
-  finally(onfinally) {
-    return this.parse().finally(onfinally);
-  }
-}
-
-class APIClient {
-  constructor({
-    baseURL,
-    maxRetries,
-    timeout = 600000,
-    httpAgent,
-    fetch: overridenFetch
-  }) {
-    this.baseURL = baseURL;
-    this.maxRetries = validatePositiveInteger("maxRetries", maxRetries !== null && maxRetries !== undefined ? maxRetries : MAX_RETRIES);
-    this.timeout = validatePositiveInteger("timeout", timeout);
-    this.httpAgent = httpAgent;
-    this.fetch = overridenFetch !== null && overridenFetch !== undefined ? overridenFetch : _fetch;
-  }
-  authHeaders(opts) {
-    return {};
-  }
-  defaultHeaders(opts) {
-    return {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      "User-Agent": this.getUserAgent(),
-      ...getPlatformHeaders(),
-      ...this.authHeaders(opts)
-    };
-  }
-  validateHeaders(headers, customHeaders) {
-  }
-  defaultIdempotencyKey() {
-    return `stainless-node-retry-${uuid4()}`;
-  }
-  get(path, opts) {
-    return this.methodRequest("get", path, opts);
-  }
-  post(path, opts) {
-    return this.methodRequest("post", path, opts);
-  }
-  patch(path, opts) {
-    return this.methodRequest("patch", path, opts);
-  }
-  put(path, opts) {
-    return this.methodRequest("put", path, opts);
-  }
-  delete(path, opts) {
-    return this.methodRequest("delete", path, opts);
-  }
-  methodRequest(method, path, opts) {
-    return this.request(Promise.resolve(opts).then((opts2) => ({ method, path, ...opts2 })));
-  }
-  getAPIList(path, Page, opts) {
-    return this.requestAPIList(Page, { method: "get", path, ...opts });
-  }
-  calculateContentLength(body) {
-    if (typeof body === "string") {
-      if (typeof Buffer !== "undefined") {
-        return Buffer.byteLength(body, "utf8").toString();
-      }
-      if (typeof TextEncoder !== "undefined") {
-        const encoder = new TextEncoder;
-        const encoded = encoder.encode(body);
-        return encoded.length.toString();
-      }
-    }
-    return null;
-  }
-  buildRequest(options) {
-    var _a, _b, _c, _d, _e, _f;
-    const { method, path, query, headers = {} } = options;
-    const body = isMultipartBody(options.body) ? options.body.body : options.body ? JSON.stringify(options.body, null, 2) : null;
-    const contentLength = this.calculateContentLength(body);
-    const url = this.buildURL(path, query);
-    if ("timeout" in options)
-      validatePositiveInteger("timeout", options.timeout);
-    const timeout = (_a = options.timeout) !== null && _a !== undefined ? _a : this.timeout;
-    const httpAgent = (_c = (_b = options.httpAgent) !== null && _b !== undefined ? _b : this.httpAgent) !== null && _c !== undefined ? _c : getDefaultAgent(url);
-    const minAgentTimeout = timeout + 1000;
-    if (typeof ((_d = httpAgent === null || httpAgent === undefined ? undefined : httpAgent.options) === null || _d === undefined ? undefined : _d.timeout) === "number" && minAgentTimeout > ((_e = httpAgent.options.timeout) !== null && _e !== undefined ? _e : 0)) {
-      httpAgent.options.timeout = minAgentTimeout;
-    }
-    if (this.idempotencyHeader && method !== "get") {
-      if (!options.idempotencyKey)
-        options.idempotencyKey = this.defaultIdempotencyKey();
-      headers[this.idempotencyHeader] = options.idempotencyKey;
-    }
-    const reqHeaders = {
-      ...contentLength && { "Content-Length": contentLength },
-      ...this.defaultHeaders(options),
-      ...headers
-    };
-    if (isMultipartBody(options.body) && !isPolyfilled) {
-      delete reqHeaders["Content-Type"];
-    }
-    Object.keys(reqHeaders).forEach((key) => reqHeaders[key] === null && delete reqHeaders[key]);
-    const req = {
-      method,
-      ...body && { body },
-      headers: reqHeaders,
-      ...httpAgent && { agent: httpAgent },
-      signal: (_f = options.signal) !== null && _f !== undefined ? _f : null
-    };
-    this.validateHeaders(reqHeaders, headers);
-    return { req, url, timeout };
-  }
-  async prepareRequest(request, { url, options }) {
-  }
-  parseHeaders(headers) {
-    return !headers ? {} : (Symbol.iterator in headers) ? Object.fromEntries(Array.from(headers).map((header) => [...header])) : { ...headers };
-  }
-  makeStatusError(status, error2, message, headers) {
-    return APIError.generate(status, error2, message, headers);
-  }
-  request(options, remainingRetries = null) {
-    return new APIPromise(this.makeRequest(options, remainingRetries));
-  }
-  async makeRequest(optionsInput, retriesRemaining) {
-    var _a, _b, _c;
-    const options = await optionsInput;
-    if (retriesRemaining == null) {
-      retriesRemaining = (_a = options.maxRetries) !== null && _a !== undefined ? _a : this.maxRetries;
-    }
-    const { req, url, timeout } = this.buildRequest(options);
-    await this.prepareRequest(req, { url, options });
-    debug("request", url, options, req.headers);
-    if ((_b = options.signal) === null || _b === undefined ? undefined : _b.aborted) {
-      throw new APIUserAbortError;
-    }
-    const controller = new AbortController;
-    const response = await this.fetchWithTimeout(url, req, timeout, controller).catch(castToError);
-    if (response instanceof Error) {
-      if ((_c = options.signal) === null || _c === undefined ? undefined : _c.aborted) {
-        throw new APIUserAbortError;
-      }
-      if (retriesRemaining) {
-        return this.retryRequest(options, retriesRemaining);
-      }
-      if (response.name === "AbortError") {
-        throw new APIConnectionTimeoutError;
-      }
-      throw new APIConnectionError({ cause: response });
-    }
-    const responseHeaders = createResponseHeaders(response.headers);
-    if (!response.ok) {
-      if (retriesRemaining && this.shouldRetry(response)) {
-        return this.retryRequest(options, retriesRemaining, responseHeaders);
-      }
-      const errText = await response.text().catch(() => "Unknown");
-      const errJSON = safeJSON(errText);
-      const errMessage = errJSON ? undefined : errText;
-      debug("response", response.status, url, responseHeaders, errMessage);
-      const err = this.makeStatusError(response.status, errJSON, errMessage, responseHeaders);
-      throw err;
-    }
-    return { response, options, controller };
-  }
-  requestAPIList(Page, options) {
-    const request = this.makeRequest(options, null);
-    return new PagePromise(this, request, Page);
-  }
-  buildURL(path, query) {
-    const url = isAbsoluteURL(path) ? new URL(path) : new URL(this.baseURL + (this.baseURL.endsWith("/") && path.startsWith("/") ? path.slice(1) : path));
-    const defaultQuery = this.defaultQuery();
-    if (!isEmptyObj(defaultQuery)) {
-      query = { ...defaultQuery, ...query };
-    }
-    if (query) {
-      url.search = this.stringifyQuery(query);
-    }
-    return url.toString();
-  }
-  stringifyQuery(query) {
-    return Object.entries(query).filter(([_, value]) => typeof value !== "undefined").map(([key, value]) => {
-      if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-        return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
-      }
-      if (value === null) {
-        return `${encodeURIComponent(key)}=`;
-      }
-      throw new Error(`Cannot stringify type ${typeof value}; Expected string, number, boolean, or null. If you need to pass nested query parameters, you can manually encode them, e.g. { query: { 'foo[key1]': value1, 'foo[key2]': value2 } }, and please open a GitHub issue requesting better support for your use case.`);
-    }).join("&");
-  }
-  async fetchWithTimeout(url, init, ms, controller) {
-    const { signal, ...options } = init || {};
-    if (signal)
-      signal.addEventListener("abort", () => controller.abort());
-    const timeout = setTimeout(() => controller.abort(), ms);
-    return this.getRequestClient().fetch(url, { signal: controller.signal, ...options }).finally(() => {
-      clearTimeout(timeout);
-    });
-  }
-  getRequestClient() {
-    return { fetch: this.fetch };
-  }
-  shouldRetry(response) {
-    const shouldRetryHeader = response.headers.get("x-should-retry");
-    if (shouldRetryHeader === "true")
-      return true;
-    if (shouldRetryHeader === "false")
-      return false;
-    if (response.status === 409)
-      return true;
-    if (response.status === 429)
-      return true;
-    if (response.status >= 500)
-      return true;
-    return false;
-  }
-  async retryRequest(options, retriesRemaining, responseHeaders) {
-    var _a;
-    retriesRemaining -= 1;
-    const retryAfter = parseInt((responseHeaders === null || responseHeaders === undefined ? undefined : responseHeaders["retry-after"]) || "");
-    const maxRetries = (_a = options.maxRetries) !== null && _a !== undefined ? _a : this.maxRetries;
-    const timeout = this.calculateRetryTimeoutSeconds(retriesRemaining, retryAfter, maxRetries) * 1000;
-    await sleep(timeout);
-    return this.makeRequest(options, retriesRemaining);
-  }
-  calculateRetryTimeoutSeconds(retriesRemaining, retryAfter, maxRetries) {
-    const initialRetryDelay = 0.5;
-    const maxRetryDelay = 2;
-    if (Number.isInteger(retryAfter) && retryAfter <= 60) {
-      return retryAfter;
-    }
-    const numRetries = maxRetries - retriesRemaining;
-    const sleepSeconds = Math.min(initialRetryDelay * Math.pow(numRetries - 1, 2), maxRetryDelay);
-    const jitter = Math.random() - 0.5;
-    return sleepSeconds + jitter;
-  }
-  getUserAgent() {
-    return `${this.constructor.name}/JS ${VERSION}`;
-  }
-}
-class AbstractPage {
-  constructor(client, response, body, options) {
-    _AbstractPage_client.set(this, undefined);
-    __classPrivateFieldSet(this, _AbstractPage_client, client, "f");
-    this.options = options;
-    this.response = response;
-    this.body = body;
-  }
-  hasNextPage() {
-    const items = this.getPaginatedItems();
-    if (!items.length)
-      return false;
-    return this.nextPageInfo() != null;
-  }
-  async getNextPage() {
-    const nextInfo = this.nextPageInfo();
-    if (!nextInfo) {
-      throw new Error("No next page expected; please check `.hasNextPage()` before calling `.getNextPage()`.");
-    }
-    const nextOptions = { ...this.options };
-    if ("params" in nextInfo) {
-      nextOptions.query = { ...nextOptions.query, ...nextInfo.params };
-    } else if ("url" in nextInfo) {
-      const params = [...Object.entries(nextOptions.query || {}), ...nextInfo.url.searchParams.entries()];
-      for (const [key, value] of params) {
-        nextInfo.url.searchParams.set(key, value);
-      }
-      nextOptions.query = undefined;
-      nextOptions.path = nextInfo.url.toString();
-    }
-    return await __classPrivateFieldGet(this, _AbstractPage_client, "f").requestAPIList(this.constructor, nextOptions);
-  }
-  async* iterPages() {
-    let page = this;
-    yield page;
-    while (page.hasNextPage()) {
-      page = await page.getNextPage();
-      yield page;
-    }
-  }
-  async* [(_AbstractPage_client = new WeakMap, Symbol.asyncIterator)]() {
-    for await (const page of this.iterPages()) {
-      for (const item of page.getPaginatedItems()) {
-        yield item;
-      }
-    }
-  }
-}
-
-class PagePromise extends APIPromise {
-  constructor(client, request, Page) {
-    super(request, async (props) => new Page(client, props.response, await defaultParseResponse(props), props.options));
-  }
-  async* [Symbol.asyncIterator]() {
-    const page = await this;
-    for await (const item of page) {
-      yield item;
-    }
-  }
-}
-var createResponseHeaders = (headers) => {
-  return new Proxy(Object.fromEntries(headers.entries()), {
-    get(target, name) {
-      const key = name.toString();
-      return target[key.toLowerCase()] || target[key];
-    }
-  });
-};
-var requestOptionsKeys = {
-  method: true,
-  path: true,
-  query: true,
-  body: true,
-  headers: true,
-  maxRetries: true,
-  stream: true,
-  timeout: true,
-  httpAgent: true,
-  signal: true,
-  idempotencyKey: true
-};
-var isRequestOptions = (obj) => {
-  return typeof obj === "object" && obj !== null && !isEmptyObj(obj) && Object.keys(obj).every((k) => hasOwn(requestOptionsKeys, k));
-};
-var getPlatformProperties = () => {
-  if (typeof Deno !== "undefined" && Deno.build != null) {
-    return {
-      "X-Stainless-Lang": "js",
-      "X-Stainless-Package-Version": VERSION,
-      "X-Stainless-OS": normalizePlatform(Deno.build.os),
-      "X-Stainless-Arch": normalizeArch(Deno.build.arch),
-      "X-Stainless-Runtime": "deno",
-      "X-Stainless-Runtime-Version": Deno.version
-    };
-  }
-  if (typeof EdgeRuntime !== "undefined") {
-    return {
-      "X-Stainless-Lang": "js",
-      "X-Stainless-Package-Version": VERSION,
-      "X-Stainless-OS": "Unknown",
-      "X-Stainless-Arch": `other:${EdgeRuntime}`,
-      "X-Stainless-Runtime": "edge",
-      "X-Stainless-Runtime-Version": process.version
-    };
-  }
-  if (Object.prototype.toString.call(typeof process !== "undefined" ? process : 0) === "[object process]") {
-    return {
-      "X-Stainless-Lang": "js",
-      "X-Stainless-Package-Version": VERSION,
-      "X-Stainless-OS": normalizePlatform(process.platform),
-      "X-Stainless-Arch": normalizeArch(process.arch),
-      "X-Stainless-Runtime": "node",
-      "X-Stainless-Runtime-Version": process.version
-    };
-  }
-  const browserInfo = getBrowserInfo();
-  if (browserInfo) {
-    return {
-      "X-Stainless-Lang": "js",
-      "X-Stainless-Package-Version": VERSION,
-      "X-Stainless-OS": "Unknown",
-      "X-Stainless-Arch": "unknown",
-      "X-Stainless-Runtime": `browser:${browserInfo.browser}`,
-      "X-Stainless-Runtime-Version": browserInfo.version
-    };
-  }
-  return {
-    "X-Stainless-Lang": "js",
-    "X-Stainless-Package-Version": VERSION,
-    "X-Stainless-OS": "Unknown",
-    "X-Stainless-Arch": "unknown",
-    "X-Stainless-Runtime": "unknown",
-    "X-Stainless-Runtime-Version": "unknown"
+  var replaceClose = (string, close, replace, index) => {
+    let start = string.substring(0, index) + replace;
+    let end = string.substring(index + close.length);
+    let nextIndex = end.indexOf(close);
+    return ~nextIndex ? start + replaceClose(end, close, replace, nextIndex) : start + end;
   };
-};
-var normalizeArch = (arch) => {
-  if (arch === "x32")
-    return "x32";
-  if (arch === "x86_64" || arch === "x64")
-    return "x64";
-  if (arch === "arm")
-    return "arm";
-  if (arch === "aarch64" || arch === "arm64")
-    return "arm64";
-  if (arch)
-    return `other:${arch}`;
-  return "unknown";
-};
-var normalizePlatform = (platform) => {
-  platform = platform.toLowerCase();
-  if (platform.includes("ios"))
-    return "iOS";
-  if (platform === "android")
-    return "Android";
-  if (platform === "darwin")
-    return "MacOS";
-  if (platform === "win32")
-    return "Windows";
-  if (platform === "freebsd")
-    return "FreeBSD";
-  if (platform === "openbsd")
-    return "OpenBSD";
-  if (platform === "linux")
-    return "Linux";
-  if (platform)
-    return `Other:${platform}`;
-  return "Unknown";
-};
-var _platformHeaders;
-var getPlatformHeaders = () => {
-  return _platformHeaders !== null && _platformHeaders !== undefined ? _platformHeaders : _platformHeaders = getPlatformProperties();
-};
-var safeJSON = (text) => {
-  try {
-    return JSON.parse(text);
-  } catch (err) {
-    return;
-  }
-};
-var startsWithSchemeRegexp = new RegExp("^(?:[a-z]+:)?//", "i");
-var isAbsoluteURL = (url) => {
-  return startsWithSchemeRegexp.test(url);
-};
-var sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-var validatePositiveInteger = (name, n) => {
-  if (typeof n !== "number" || !Number.isInteger(n)) {
-    throw new Error(`${name} must be an integer`);
-  }
-  if (n < 0) {
-    throw new Error(`${name} must be a positive integer`);
-  }
-  return n;
-};
-var castToError = (err) => {
-  if (err instanceof Error)
-    return err;
-  return new Error(err);
-};
-var readEnv = (env) => {
-  var _a, _b, _c, _d;
-  if (typeof process !== "undefined") {
-    return (_b = (_a = process.env) === null || _a === undefined ? undefined : _a[env]) !== null && _b !== undefined ? _b : undefined;
-  }
-  if (typeof Deno !== "undefined") {
-    return (_d = (_c = Deno.env) === null || _c === undefined ? undefined : _c.get) === null || _d === undefined ? undefined : _d.call(_c, env);
-  }
-  return;
-};
-var uuid4 = () => {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = Math.random() * 16 | 0;
-    const v = c === "x" ? r : r & 3 | 8;
-    return v.toString(16);
+  var createColors = (enabled = isColorSupported) => ({
+    isColorSupported: enabled,
+    reset: enabled ? (s) => `\x1B[0m${s}\x1B[0m` : String,
+    bold: enabled ? formatter("\x1B[1m", "\x1B[22m", "\x1B[22m\x1B[1m") : String,
+    dim: enabled ? formatter("\x1B[2m", "\x1B[22m", "\x1B[22m\x1B[2m") : String,
+    italic: enabled ? formatter("\x1B[3m", "\x1B[23m") : String,
+    underline: enabled ? formatter("\x1B[4m", "\x1B[24m") : String,
+    inverse: enabled ? formatter("\x1B[7m", "\x1B[27m") : String,
+    hidden: enabled ? formatter("\x1B[8m", "\x1B[28m") : String,
+    strikethrough: enabled ? formatter("\x1B[9m", "\x1B[29m") : String,
+    black: enabled ? formatter("\x1B[30m", "\x1B[39m") : String,
+    red: enabled ? formatter("\x1B[31m", "\x1B[39m") : String,
+    green: enabled ? formatter("\x1B[32m", "\x1B[39m") : String,
+    yellow: enabled ? formatter("\x1B[33m", "\x1B[39m") : String,
+    blue: enabled ? formatter("\x1B[34m", "\x1B[39m") : String,
+    magenta: enabled ? formatter("\x1B[35m", "\x1B[39m") : String,
+    cyan: enabled ? formatter("\x1B[36m", "\x1B[39m") : String,
+    white: enabled ? formatter("\x1B[37m", "\x1B[39m") : String,
+    gray: enabled ? formatter("\x1B[90m", "\x1B[39m") : String,
+    bgBlack: enabled ? formatter("\x1B[40m", "\x1B[49m") : String,
+    bgRed: enabled ? formatter("\x1B[41m", "\x1B[49m") : String,
+    bgGreen: enabled ? formatter("\x1B[42m", "\x1B[49m") : String,
+    bgYellow: enabled ? formatter("\x1B[43m", "\x1B[49m") : String,
+    bgBlue: enabled ? formatter("\x1B[44m", "\x1B[49m") : String,
+    bgMagenta: enabled ? formatter("\x1B[45m", "\x1B[49m") : String,
+    bgCyan: enabled ? formatter("\x1B[46m", "\x1B[49m") : String,
+    bgWhite: enabled ? formatter("\x1B[47m", "\x1B[49m") : String
   });
-};
-var isRunningInBrowser = () => {
-  return typeof window !== "undefined" && typeof window.document !== "undefined" && typeof navigator !== "undefined";
-};
-
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/pagination.mjs
-class Page extends AbstractPage {
-  constructor(client, response, body, options) {
-    super(client, response, body, options);
-    this.object = body.object;
-    this.data = body.data;
-  }
-  getPaginatedItems() {
-    return this.data;
-  }
-  nextPageParams() {
-    return null;
-  }
-  nextPageInfo() {
-    return null;
-  }
-}
-
-class CursorPage extends AbstractPage {
-  constructor(client, response, body, options) {
-    super(client, response, body, options);
-    this.data = body.data;
-  }
-  getPaginatedItems() {
-    return this.data;
-  }
-  nextPageParams() {
-    const info = this.nextPageInfo();
-    if (!info)
-      return null;
-    if ("params" in info)
-      return info.params;
-    const params = Object.fromEntries(info.url.searchParams);
-    if (!Object.keys(params).length)
-      return null;
-    return params;
-  }
-  nextPageInfo() {
-    var _a, _b;
-    if (!((_a = this.data) === null || _a === undefined ? undefined : _a.length)) {
-      return null;
-    }
-    const next = (_b = this.data[this.data.length - 1]) === null || _b === undefined ? undefined : _b.id;
-    if (!next)
-      return null;
-    return { params: { after: next } };
-  }
-}
-
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/resource.mjs
-class APIResource {
-  constructor(client) {
-    this.client = client;
-    this.get = client.get.bind(client);
-    this.post = client.post.bind(client);
-    this.patch = client.patch.bind(client);
-    this.put = client.put.bind(client);
-    this.delete = client.delete.bind(client);
-    this.getAPIList = client.getAPIList.bind(client);
-  }
-}
-
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/resources/audio/transcriptions.mjs
-class Transcriptions extends APIResource {
-  create(body, options) {
-    return this.post("/audio/transcriptions", multipartFormRequestOptions({ body, ...options }));
-  }
-}
-(function(Transcriptions2) {
-})(Transcriptions || (Transcriptions = {}));
-
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/resources/audio/translations.mjs
-class Translations extends APIResource {
-  create(body, options) {
-    return this.post("/audio/translations", multipartFormRequestOptions({ body, ...options }));
-  }
-}
-(function(Translations2) {
-})(Translations || (Translations = {}));
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/resources/audio/audio.mjs
-class Audio extends APIResource {
-  constructor() {
-    super(...arguments);
-    this.transcriptions = new Transcriptions(this.client);
-    this.translations = new Translations(this.client);
-  }
-}
-(function(Audio2) {
-  Audio2.Transcriptions = Transcriptions;
-  Audio2.Translations = Translations;
-})(Audio || (Audio = {}));
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/resources/chat/completions.mjs
-class Completions extends APIResource {
-  create(body, options) {
-    var _a;
-    return this.post("/chat/completions", {
-      body,
-      ...options,
-      stream: (_a = body.stream) !== null && _a !== undefined ? _a : false
-    });
-  }
-}
-(function(Completions2) {
-})(Completions || (Completions = {}));
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/resources/chat/chat.mjs
-class Chat extends APIResource {
-  constructor() {
-    super(...arguments);
-    this.completions = new Completions(this.client);
-  }
-}
-(function(Chat2) {
-  Chat2.Completions = Completions;
-})(Chat || (Chat = {}));
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/resources/completions.mjs
-class Completions2 extends APIResource {
-  create(body, options) {
-    var _a;
-    return this.post("/completions", {
-      body,
-      ...options,
-      stream: (_a = body.stream) !== null && _a !== undefined ? _a : false
-    });
-  }
-}
-(function(Completions3) {
-})(Completions2 || (Completions2 = {}));
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/resources/embeddings.mjs
-class Embeddings extends APIResource {
-  create(body, options) {
-    return this.post("/embeddings", { body, ...options });
-  }
-}
-(function(Embeddings2) {
-})(Embeddings || (Embeddings = {}));
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/resources/edits.mjs
-class Edits extends APIResource {
-  create(body, options) {
-    return this.post("/edits", { body, ...options });
-  }
-}
-(function(Edits2) {
-})(Edits || (Edits = {}));
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/resources/files.mjs
-class Files extends APIResource {
-  create(body, options) {
-    return this.post("/files", multipartFormRequestOptions({ body, ...options }));
-  }
-  retrieve(fileId, options) {
-    return this.get(`/files/${fileId}`, options);
-  }
-  list(options) {
-    return this.getAPIList("/files", FileObjectsPage, options);
-  }
-  del(fileId, options) {
-    return this.delete(`/files/${fileId}`, options);
-  }
-  retrieveContent(fileId, options) {
-    return this.get(`/files/${fileId}/content`, {
-      ...options,
-      headers: {
-        Accept: "application/json",
-        ...options === null || options === undefined ? undefined : options.headers
-      }
-    });
-  }
-  async waitForProcessing(id, { pollInterval = 5000, maxWait = 30 * 60 * 1000 } = {}) {
-    const TERMINAL_STATES = new Set(["processed", "error", "deleted"]);
-    const start = Date.now();
-    let file = await this.retrieve(id);
-    while (!file.status || !TERMINAL_STATES.has(file.status)) {
-      await sleep(pollInterval);
-      file = await this.retrieve(id);
-      if (Date.now() - start > maxWait) {
-        throw new APIConnectionTimeoutError({
-          message: `Giving up on waiting for file ${id} to finish processing after ${maxWait} milliseconds.`
-        });
-      }
-    }
-    return file;
-  }
-}
-
-class FileObjectsPage extends Page {
-}
-(function(Files2) {
-})(Files || (Files = {}));
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/resources/fine-tunes.mjs
-class FineTunes extends APIResource {
-  create(body, options) {
-    return this.post("/fine-tunes", { body, ...options });
-  }
-  retrieve(fineTuneId, options) {
-    return this.get(`/fine-tunes/${fineTuneId}`, options);
-  }
-  list(options) {
-    return this.getAPIList("/fine-tunes", FineTunesPage, options);
-  }
-  cancel(fineTuneId, options) {
-    return this.post(`/fine-tunes/${fineTuneId}/cancel`, options);
-  }
-  listEvents(fineTuneId, query, options) {
-    var _a;
-    return this.get(`/fine-tunes/${fineTuneId}/events`, {
-      query,
-      timeout: 86400000,
-      ...options,
-      stream: (_a = query === null || query === undefined ? undefined : query.stream) !== null && _a !== undefined ? _a : false
-    });
-  }
-}
-
-class FineTunesPage extends Page {
-}
-(function(FineTunes2) {
-})(FineTunes || (FineTunes = {}));
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/resources/fine-tuning/jobs.mjs
-class Jobs extends APIResource {
-  create(body, options) {
-    return this.post("/fine_tuning/jobs", { body, ...options });
-  }
-  retrieve(fineTuningJobId, options) {
-    return this.get(`/fine_tuning/jobs/${fineTuningJobId}`, options);
-  }
-  list(query = {}, options) {
-    if (isRequestOptions(query)) {
-      return this.list({}, query);
-    }
-    return this.getAPIList("/fine_tuning/jobs", FineTuningJobsPage, { query, ...options });
-  }
-  cancel(fineTuningJobId, options) {
-    return this.post(`/fine_tuning/jobs/${fineTuningJobId}/cancel`, options);
-  }
-  listEvents(fineTuningJobId, query = {}, options) {
-    if (isRequestOptions(query)) {
-      return this.listEvents(fineTuningJobId, {}, query);
-    }
-    return this.getAPIList(`/fine_tuning/jobs/${fineTuningJobId}/events`, FineTuningJobEventsPage, {
-      query,
-      ...options
-    });
-  }
-}
-
-class FineTuningJobsPage extends CursorPage {
-}
-
-class FineTuningJobEventsPage extends CursorPage {
-}
-(function(Jobs2) {
-})(Jobs || (Jobs = {}));
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/resources/fine-tuning/fine-tuning.mjs
-class FineTuning extends APIResource {
-  constructor() {
-    super(...arguments);
-    this.jobs = new Jobs(this.client);
-  }
-}
-(function(FineTuning2) {
-  FineTuning2.Jobs = Jobs;
-  FineTuning2.FineTuningJobsPage = FineTuningJobsPage;
-  FineTuning2.FineTuningJobEventsPage = FineTuningJobEventsPage;
-})(FineTuning || (FineTuning = {}));
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/resources/images.mjs
-class Images extends APIResource {
-  createVariation(body, options) {
-    return this.post("/images/variations", multipartFormRequestOptions({ body, ...options }));
-  }
-  edit(body, options) {
-    return this.post("/images/edits", multipartFormRequestOptions({ body, ...options }));
-  }
-  generate(body, options) {
-    return this.post("/images/generations", { body, ...options });
-  }
-}
-(function(Images2) {
-})(Images || (Images = {}));
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/resources/models.mjs
-class Models extends APIResource {
-  retrieve(model, options) {
-    return this.get(`/models/${model}`, options);
-  }
-  list(options) {
-    return this.getAPIList("/models", ModelsPage, options);
-  }
-  del(model, options) {
-    return this.delete(`/models/${model}`, options);
-  }
-}
-
-class ModelsPage extends Page {
-}
-(function(Models2) {
-})(Models || (Models = {}));
-// node_modules/.pnpm/openai@4.6.0/node_modules/openai/resources/moderations.mjs
-class Moderations extends APIResource {
-  create(body, options) {
-    return this.post("/moderations", { body, ...options });
-  }
-}
-(function(Moderations2) {
-})(Moderations || (Moderations = {}));
-// /home/dev/projects/git-ai/node_modules/openai/index.mjs
-var _a;
-
-class OpenAI extends APIClient {
-  constructor(_b) {
-    var _c, _d, _e;
-    var {
-      apiKey = readEnv("OPENAI_API_KEY"),
-      organization = (_c = readEnv("OPENAI_ORG_ID")) !== null && _c !== undefined ? _c : null,
-      ...opts
-    } = _b === undefined ? {} : _b;
-    if (apiKey === undefined) {
-      throw new Error("The OPENAI_API_KEY environment variable is missing or empty; either provide it, or instantiate the OpenAI client with an apiKey option, like new OpenAI({ apiKey: 'my apiKey' }).");
-    }
-    const options = {
-      apiKey,
-      organization,
-      ...opts,
-      baseURL: (_d = opts.baseURL) !== null && _d !== undefined ? _d : `https://api.openai.com/v1`
-    };
-    if (!options.dangerouslyAllowBrowser && isRunningInBrowser()) {
-      throw new Error("It looks like you're running in a browser-like environment.\n\nThis is disabled by default, as it risks exposing your secret API credentials to attackers.\nIf you understand the risks and have appropriate mitigations in place,\nyou can set the `dangerouslyAllowBrowser` option to `true`, e.g.,\n\nnew OpenAI({ apiKey, dangerouslyAllowBrowser: true });\n\nhttps://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety\n");
-    }
-    super({
-      baseURL: options.baseURL,
-      timeout: (_e = options.timeout) !== null && _e !== undefined ? _e : 600000,
-      httpAgent: options.httpAgent,
-      maxRetries: options.maxRetries,
-      fetch: options.fetch
-    });
-    this.completions = new Completions2(this);
-    this.chat = new Chat(this);
-    this.edits = new Edits(this);
-    this.embeddings = new Embeddings(this);
-    this.files = new Files(this);
-    this.images = new Images(this);
-    this.audio = new Audio(this);
-    this.moderations = new Moderations(this);
-    this.models = new Models(this);
-    this.fineTuning = new FineTuning(this);
-    this.fineTunes = new FineTunes(this);
-    this._options = options;
-    this.apiKey = apiKey;
-    this.organization = organization;
-  }
-  defaultQuery() {
-    return this._options.defaultQuery;
-  }
-  defaultHeaders(opts) {
-    return {
-      ...super.defaultHeaders(opts),
-      "OpenAI-Organization": this.organization,
-      ...this._options.defaultHeaders
-    };
-  }
-  authHeaders(opts) {
-    return { Authorization: `Bearer ${this.apiKey}` };
-  }
-}
-_a = OpenAI;
-OpenAI.OpenAI = _a;
-OpenAI.APIError = APIError;
-OpenAI.APIConnectionError = APIConnectionError;
-OpenAI.APIConnectionTimeoutError = APIConnectionTimeoutError;
-OpenAI.APIUserAbortError = APIUserAbortError;
-OpenAI.NotFoundError = NotFoundError;
-OpenAI.ConflictError = ConflictError;
-OpenAI.RateLimitError = RateLimitError;
-OpenAI.BadRequestError = BadRequestError;
-OpenAI.AuthenticationError = AuthenticationError;
-OpenAI.InternalServerError = InternalServerError;
-OpenAI.PermissionDeniedError = PermissionDeniedError;
-OpenAI.UnprocessableEntityError = UnprocessableEntityError;
-(function(OpenAI2) {
-  OpenAI2.toFile = toFile;
-  OpenAI2.fileFromPath = fileFromPath;
-  OpenAI2.Page = Page;
-  OpenAI2.CursorPage = CursorPage;
-  OpenAI2.Completions = Completions2;
-  OpenAI2.Chat = Chat;
-  OpenAI2.Edits = Edits;
-  OpenAI2.Embeddings = Embeddings;
-  OpenAI2.Files = Files;
-  OpenAI2.FileObjectsPage = FileObjectsPage;
-  OpenAI2.Images = Images;
-  OpenAI2.Audio = Audio;
-  OpenAI2.Moderations = Moderations;
-  OpenAI2.Models = Models;
-  OpenAI2.ModelsPage = ModelsPage;
-  OpenAI2.FineTuning = FineTuning;
-  OpenAI2.FineTunes = FineTunes;
-  OpenAI2.FineTunesPage = FineTunesPage;
-})(OpenAI || (OpenAI = {}));
-var openai_default = OpenAI;
-
-// src/environment.ts
-var import_dotenv = __toESM(require_main(), 1);
-
-// src/logger.ts
-var import_picocolors = __toESM(require_picocolors(), 1);
-var prefix = "[ git-ai ]";
-var error3 = (...msg) => console.error(`${import_picocolors.default.red(prefix)} ${import_picocolors.default.red(msg.join("\n" + prefix + " "))}`);
-var errorExit = (...msg) => {
-  error3(...msg);
-  return process.exit(1);
-};
-
-// src/environment.ts
-var { NODE_ENV } = process.env;
-import_dotenv.default.config({
-  path: `.env${NODE_ENV ? "." + NODE_ENV : ""}`
+  module.exports = createColors();
+  module.exports.createColors = createColors;
 });
-var { OPENAI_API_KEY: key } = process.env;
-if ((key ?? "").length === 0) {
-  errorExit("`OPENAI_API_KEY` environment variable is not set");
-}
-var OPENAI_API_KEY = key;
-
-// src/ai.ts
-var intro = `Create a summary of the diff below the template, and explain what changes and why depending only on the actual diff. Wrap the description to 80 characters. Use the following format of conventional-commits to summarize it:
-"<type>(optional scope): <Short description, up to 80 chars>
-\n
-<descriptional text> - Be specific but not too detail-rich - be descriptive.
-Use the imperative, present tense: "change" not "changed" nor "changes".
-Don't capitalize first letter of the description.
-No dot (.) at the end."`;
-var gitAi = async (diff) => {
-  const openai = new openai_default({
-    apiKey: OPENAI_API_KEY
-  });
-  const completion = await openai.chat.completions.create({
-    messages: [{ role: "system", content: intro + "\n\n" + diff }],
-    model: "gpt-3.5-turbo"
-  });
-  const msg = completion.choices[0].message.content + "\n\n";
-  return msg;
-};
 
 // /home/dev/projects/git-ai/node_modules/simple-git/dist/esm/index.js
 var file_exists = __toESM(require_dist(), 1);
@@ -2604,10 +861,10 @@ var asNumber = function(source, onNaN = 0) {
   const num = parseInt(source, 10);
   return isNaN(num) ? onNaN : num;
 };
-var prefixedArray = function(input, prefix2) {
+var prefixedArray = function(input, prefix) {
   const output = [];
   for (let i = 0, max = input.length;i < max; i++) {
-    output.push(prefix2, input[i]);
+    output.push(prefix, input[i]);
   }
   return output;
 };
@@ -2647,14 +904,14 @@ var appendTaskOptions = function(options, commands = []) {
   if (!filterPlainObject(options)) {
     return commands;
   }
-  return Object.keys(options).reduce((commands2, key2) => {
-    const value = options[key2];
+  return Object.keys(options).reduce((commands2, key) => {
+    const value = options[key];
     if (isPathSpec(value)) {
       commands2.push(value);
     } else if (filterPrimitives(value, ["boolean"])) {
-      commands2.push(key2 + "=" + value);
+      commands2.push(key + "=" + value);
     } else {
-      commands2.push(key2);
+      commands2.push(key);
     }
     return commands2;
   }, commands);
@@ -2736,8 +993,8 @@ var checkIsBareRepoTask = function() {
     parser
   };
 };
-var isNotRepoMessage = function(error4) {
-  return /(Not a git repository|Kein Git-Repository)/i.test(String(error4));
+var isNotRepoMessage = function(error) {
+  return /(Not a git repository|Kein Git-Repository)/i.test(String(error));
 };
 var cleanSummaryParser = function(dryRun, text) {
   const summary = new CleanResponse(dryRun);
@@ -2756,12 +1013,12 @@ var adhocExecTask = function(parser3) {
     parser: parser3
   };
 };
-var configurationErrorTask = function(error4) {
+var configurationErrorTask = function(error) {
   return {
     commands: EMPTY_COMMANDS,
     format: "empty",
     parser() {
-      throw typeof error4 === "string" ? new TaskConfigurationError(error4) : error4;
+      throw typeof error === "string" ? new TaskConfigurationError(error) : error;
     }
   };
 };
@@ -2853,12 +1110,12 @@ var configListParser = function(text) {
   }
   return config;
 };
-var configGetParser = function(text, key2) {
+var configGetParser = function(text, key) {
   let value = null;
   const values = [];
   const scopes = new Map;
-  for (const item of configParser(text, key2)) {
-    if (item.key !== key2) {
+  for (const item of configParser(text, key)) {
+    if (item.key !== key) {
       continue;
     }
     values.push(value = item.value);
@@ -2868,7 +1125,7 @@ var configGetParser = function(text, key2) {
     scopes.get(item.file).push(value);
   }
   return {
-    key: key2,
+    key,
     paths: Array.from(scopes.keys()),
     scopes,
     value,
@@ -2883,13 +1140,13 @@ function* configParser(text, requestedKey = null) {
   for (let i = 0, max = lines.length - 1;i < max; ) {
     const file = configFilePath(lines[i++]);
     let value = lines[i++];
-    let key2 = requestedKey;
+    let key = requestedKey;
     if (value.includes("\n")) {
       const line = splitOn(value, "\n");
-      key2 = line[0];
+      key = line[0];
       value = line[1];
     }
-    yield { file, key: key2, value };
+    yield { file, key, value };
   }
 }
 var asConfigScope = function(scope, fallback) {
@@ -2898,12 +1155,12 @@ var asConfigScope = function(scope, fallback) {
   }
   return fallback;
 };
-var addConfigTask = function(key2, value, append2, scope) {
+var addConfigTask = function(key, value, append2, scope) {
   const commands = ["config", `--${scope}`];
   if (append2) {
     commands.push("--add");
   }
-  commands.push(key2, value);
+  commands.push(key, value);
   return {
     commands,
     format: "utf-8",
@@ -2912,8 +1169,8 @@ var addConfigTask = function(key2, value, append2, scope) {
     }
   };
 };
-var getConfigTask = function(key2, scope) {
-  const commands = ["config", "--null", "--show-origin", "--get-all", key2];
+var getConfigTask = function(key, scope) {
+  const commands = ["config", "--null", "--show-origin", "--get-all", key];
   if (scope) {
     commands.splice(1, 0, `--${scope}`);
   }
@@ -2921,7 +1178,7 @@ var getConfigTask = function(key2, scope) {
     commands,
     format: "utf-8",
     parser(text) {
-      return configGetParser(text, key2);
+      return configGetParser(text, key);
     }
   };
 };
@@ -2940,11 +1197,11 @@ var listConfigTask = function(scope) {
 };
 var config_default = function() {
   return {
-    addConfig(key2, value, ...rest) {
-      return this._runTask(addConfigTask(key2, value, rest[0] === true, asConfigScope(rest[1], "local")), trailingFunctionArgument(arguments));
+    addConfig(key, value, ...rest) {
+      return this._runTask(addConfigTask(key, value, rest[0] === true, asConfigScope(rest[1], "local")), trailingFunctionArgument(arguments));
     },
-    getConfig(key2, scope) {
-      return this._runTask(getConfigTask(key2, asConfigScope(scope, undefined)), trailingFunctionArgument(arguments));
+    getConfig(key, scope) {
+      return this._runTask(getConfigTask(key, asConfigScope(scope, undefined)), trailingFunctionArgument(arguments));
     },
     listConfig(...rest) {
       return this._runTask(listConfigTask(asConfigScope(rest[0], undefined)), trailingFunctionArgument(arguments));
@@ -3020,15 +1277,15 @@ var isValidResetMode = function(mode) {
 var createLog = function() {
   return import_debug.default("simple-git");
 };
-var prefixedLogger = function(to, prefix2, forward) {
-  if (!prefix2 || !String(prefix2).replace(/\s*/, "")) {
+var prefixedLogger = function(to, prefix, forward) {
+  if (!prefix || !String(prefix).replace(/\s*/, "")) {
     return !forward ? to : (message, ...args) => {
       to(message, ...args);
       forward(message, ...args);
     };
   }
   return (message, ...args) => {
-    to(`%s ${message}`, prefix2, ...args);
+    to(`%s ${message}`, prefix, ...args);
     if (forward) {
       forward(message, ...args);
     }
@@ -3048,16 +1305,16 @@ var createLogger = function(label, verbose, initialStep, infoDebugger = createLo
   const labelPrefix = label && `[${label}]` || "";
   const spawned = [];
   const debugDebugger = typeof verbose === "string" ? infoDebugger.extend(verbose) : verbose;
-  const key2 = childLoggerName(filterType(verbose, filterString), debugDebugger, infoDebugger);
+  const key = childLoggerName(filterType(verbose, filterString), debugDebugger, infoDebugger);
   return step(initialStep);
   function sibling(name, initial) {
-    return append(spawned, createLogger(label, key2.replace(/^[^:]+/, name), initial, infoDebugger));
+    return append(spawned, createLogger(label, key.replace(/^[^:]+/, name), initial, infoDebugger));
   }
   function step(phase) {
     const stepPrefix = phase && `[${phase}]` || "";
-    const debug22 = debugDebugger && prefixedLogger(debugDebugger, stepPrefix) || NOOP;
-    const info = prefixedLogger(infoDebugger, `${labelPrefix} ${stepPrefix}`, debug22);
-    return Object.assign(debugDebugger ? debug22 : info, {
+    const debug2 = debugDebugger && prefixedLogger(debugDebugger, stepPrefix) || NOOP;
+    const info = prefixedLogger(infoDebugger, `${labelPrefix} ${stepPrefix}`, debug2);
+    return Object.assign(debugDebugger ? debug2 : info, {
       label,
       sibling,
       info,
@@ -3072,15 +1329,15 @@ var pluginContext = function(task, commands) {
     commands
   };
 };
-var onErrorReceived = function(target, logger2) {
+var onErrorReceived = function(target, logger) {
   return (err) => {
-    logger2(`[ERROR] child process exception %o`, err);
+    logger(`[ERROR] child process exception %o`, err);
     target.push(Buffer.from(String(err.stack), "ascii"));
   };
 };
-var onDataReceived = function(target, name, logger2, output) {
+var onDataReceived = function(target, name, logger, output) {
   return (buffer) => {
-    logger2(`%s received %L bytes`, name, buffer);
+    logger(`%s received %L bytes`, name, buffer);
     output(`%B`, buffer);
     target.push(buffer);
   };
@@ -3302,9 +1559,9 @@ var prettyFormat = function(format, splitter) {
   return [fields, formatStr.join(splitter)];
 };
 var userOptions = function(input) {
-  return Object.keys(input).reduce((out, key2) => {
-    if (!(key2 in excludeOptions)) {
-      out[key2] = input[key2];
+  return Object.keys(input).reduce((out, key) => {
+    if (!(key in excludeOptions)) {
+      out[key] = input[key];
     }
     return out;
   }, {});
@@ -3510,12 +1767,12 @@ var statusTask = function(customArgs) {
     }
   };
 };
-var versionResponse = function(major = 0, minor = 0, patch = 0, agent2 = "", installed = true) {
+var versionResponse = function(major = 0, minor = 0, patch = 0, agent = "", installed = true) {
   return Object.defineProperty({
     major,
     minor,
     patch,
-    agent: agent2,
+    agent,
     installed
   }, "toString", {
     value() {
@@ -3535,11 +1792,11 @@ var version_default = function() {
         commands: ["--version"],
         format: "utf-8",
         parser: versionParser,
-        onError(result, error4, done, fail) {
+        onError(result, error, done, fail) {
           if (result.exitCode === -2) {
             return done(Buffer.from(NOT_INSTALLED));
           }
-          fail(error4);
+          fail(error);
         }
       });
     }
@@ -3616,9 +1873,9 @@ var deleteBranchesTask = function(branches, forceDelete = false) {
     parser(stdOut, stdErr) {
       return parseBranchDeletions(stdOut, stdErr);
     },
-    onError({ exitCode, stdOut }, error4, done, fail) {
-      if (!hasBranchDeletionError(String(error4), exitCode)) {
-        return fail(error4);
+    onError({ exitCode, stdOut }, error, done, fail) {
+      if (!hasBranchDeletionError(String(error), exitCode)) {
+        return fail(error);
       }
       done(stdOut);
     }
@@ -3631,11 +1888,11 @@ var deleteBranchTask = function(branch, forceDelete = false) {
     parser(stdOut, stdErr) {
       return parseBranchDeletions(stdOut, stdErr).branches[branch];
     },
-    onError({ exitCode, stdErr, stdOut }, error4, _, fail) {
-      if (!hasBranchDeletionError(String(error4), exitCode)) {
-        return fail(error4);
+    onError({ exitCode, stdErr, stdOut }, error, _, fail) {
+      if (!hasBranchDeletionError(String(error), exitCode)) {
+        return fail(error);
       }
-      throw new GitResponseError(task.parser(bufferToString(stdOut), bufferToString(stdErr)), String(error4));
+      throw new GitResponseError(task.parser(bufferToString(stdOut), bufferToString(stdErr)), String(error));
     }
   };
   return task;
@@ -3915,11 +2172,11 @@ var blockUnsafeOperationsPlugin = function({
   };
 };
 var commandConfigPrefixingPlugin = function(configuration) {
-  const prefix2 = prefixedArray(configuration, "-c");
+  const prefix = prefixedArray(configuration, "-c");
   return {
     type: "spawn.args",
     action(data) {
-      return [...prefix2, ...data];
+      return [...prefix, ...data];
     }
   };
 };
@@ -3995,9 +2252,9 @@ var getErrorMessage = function(result) {
   return Buffer.concat([...result.stdOut, ...result.stdErr]);
 };
 var errorDetectionHandler = function(overwrite = false, isError = isTaskError, errorMessage = getErrorMessage) {
-  return (error4, result) => {
-    if (!overwrite && error4 || !isError(result)) {
-      return error4;
+  return (error, result) => {
+    if (!overwrite && error || !isError(result)) {
+      return error;
     }
     return errorMessage(result);
   };
@@ -4006,16 +2263,16 @@ var errorDetectionPlugin = function(config) {
   return {
     type: "task.error",
     action(data, context) {
-      const error4 = config(data.error, {
+      const error = config(data.error, {
         stdErr: context.stdErr,
         stdOut: context.stdOut,
         exitCode: context.exitCode
       });
-      if (Buffer.isBuffer(error4)) {
-        return { error: new GitError(undefined, error4.toString("utf-8")) };
+      if (Buffer.isBuffer(error)) {
+        return { error: new GitError(undefined, error.toString("utf-8")) };
       }
       return {
-        error: error4
+        error
       };
     }
   };
@@ -4108,7 +2365,7 @@ var suffixPathsPlugin = function() {
   return {
     type: "spawn.args",
     action(data) {
-      const prefix2 = [];
+      const prefix = [];
       let suffix;
       function append2(args) {
         (suffix = suffix || []).push(...args);
@@ -4123,9 +2380,9 @@ var suffixPathsPlugin = function() {
           append2(data.slice(i + 1).flatMap((item) => isPathSpec(item) && toPaths(item) || item));
           break;
         }
-        prefix2.push(param);
+        prefix.push(param);
       }
-      return !suffix ? prefix2 : [...prefix2, "--", ...suffix.map(String)];
+      return !suffix ? prefix : [...prefix, "--", ...suffix.map(String)];
     }
   };
 };
@@ -4157,7 +2414,7 @@ var __getOwnPropNames2 = Object.getOwnPropertyNames;
 var __getOwnPropSymbols = Object.getOwnPropertySymbols;
 var __hasOwnProp2 = Object.prototype.hasOwnProperty;
 var __propIsEnum = Object.prototype.propertyIsEnumerable;
-var __defNormalProp = (obj, key2, value) => (key2 in obj) ? __defProp2(obj, key2, { enumerable: true, configurable: true, writable: true, value }) : obj[key2] = value;
+var __defNormalProp = (obj, key, value) => (key in obj) ? __defProp2(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __spreadValues = (a, b) => {
   for (var prop in b || (b = {}))
     if (__hasOwnProp2.call(b, prop))
@@ -4183,9 +2440,9 @@ var __export = (target, all) => {
 };
 var __reExport = (target, module, copyDefault, desc) => {
   if (module && typeof module === "object" || typeof module === "function") {
-    for (let key2 of __getOwnPropNames2(module))
-      if (!__hasOwnProp2.call(target, key2) && (copyDefault || key2 !== "default"))
-        __defProp2(target, key2, { get: () => module[key2], enumerable: !(desc = __getOwnPropDesc(module, key2)) || desc.enumerable });
+    for (let key of __getOwnPropNames2(module))
+      if (!__hasOwnProp2.call(target, key) && (copyDefault || key !== "default"))
+        __defProp2(target, key, { get: () => module[key], enumerable: !(desc = __getOwnPropDesc(module, key)) || desc.enumerable });
   }
   return target;
 };
@@ -4470,11 +2727,11 @@ var init_check_is_repo = __esm({
       CheckRepoActions2["IS_REPO_ROOT"] = "root";
       return CheckRepoActions2;
     })(CheckRepoActions || {});
-    onError = ({ exitCode }, error4, done, fail) => {
-      if (exitCode === 128 && isNotRepoMessage(error4)) {
+    onError = ({ exitCode }, error, done, fail) => {
+      if (exitCode === 128 && isNotRepoMessage(error)) {
         return done(Buffer.from("false"));
       }
-      fail(error4);
+      fail(error);
     };
     parser = (text) => {
       return text.trim() === "true";
@@ -4582,14 +2839,14 @@ var init_ConfigList = __esm({
         }
         return this.values[file];
       }
-      addValue(file, key2, value) {
+      addValue(file, key, value) {
         const values = this.addFile(file);
-        if (!values.hasOwnProperty(key2)) {
-          values[key2] = value;
-        } else if (Array.isArray(values[key2])) {
-          values[key2].push(value);
+        if (!values.hasOwnProperty(key)) {
+          values[key] = value;
+        } else if (Array.isArray(values[key])) {
+          values[key].push(value);
         } else {
-          values[key2] = [values[key2], value];
+          values[key] = [values[key], value];
         }
         this._all = undefined;
       }
@@ -4612,7 +2869,7 @@ var init_config = __esm({
 });
 var disallowedOptions;
 var Query;
-var _a2;
+var _a;
 var GrepQuery;
 var init_grep = __esm({
   "src/lib/tasks/grep.ts"() {
@@ -4622,9 +2879,9 @@ var init_grep = __esm({
     Query = Symbol("grepQuery");
     GrepQuery = class {
       constructor() {
-        this[_a2] = [];
+        this[_a] = [];
       }
-      *[(_a2 = Query, Symbol.iterator)]() {
+      *[(_a = Query, Symbol.iterator)]() {
         for (const query of this[Query]) {
           yield query;
         }
@@ -4690,10 +2947,10 @@ var init_tasks_pending_queue = __esm({
       }
       createProgress(task) {
         const name = _TasksPendingQueue.getName(task.commands[0]);
-        const logger2 = createLogger(this.logLabel, name);
+        const logger = createLogger(this.logLabel, name);
         return {
           task,
-          logger: logger2,
+          logger,
           name
         };
       }
@@ -4704,12 +2961,12 @@ var init_tasks_pending_queue = __esm({
         return progress;
       }
       fatal(err) {
-        for (const [task, { logger: logger2 }] of Array.from(this._queue.entries())) {
+        for (const [task, { logger }] of Array.from(this._queue.entries())) {
           if (task === err.task) {
-            logger2.info(`Failed %o`, err);
-            logger2(`Fatal exception, any as-yet un-started tasks run through this executor will not be attempted`);
+            logger.info(`Failed %o`, err);
+            logger(`Fatal exception, any as-yet un-started tasks run through this executor will not be attempted`);
           } else {
-            logger2.info(`A fatal exception occurred in a previous task, the queue has been purged: %o`, err.message);
+            logger.info(`A fatal exception occurred in a previous task, the queue has been purged: %o`, err.message);
           }
           this.complete(task);
         }
@@ -4781,8 +3038,8 @@ var init_git_executor_chain = __esm({
           const onScheduleComplete = yield this._scheduler.next();
           const onQueueComplete = () => this._queue.complete(task);
           try {
-            const { logger: logger2 } = this._queue.attempt(task);
-            return yield isEmptyTask(task) ? this.attemptEmptyTask(task, logger2) : this.attemptRemoteTask(task, logger2);
+            const { logger } = this._queue.attempt(task);
+            return yield isEmptyTask(task) ? this.attemptEmptyTask(task, logger) : this.attemptRemoteTask(task, logger);
           } catch (e) {
             throw this.onFatalException(task, e);
           } finally {
@@ -4797,48 +3054,48 @@ var init_git_executor_chain = __esm({
         this._queue.fatal(gitError);
         return gitError;
       }
-      attemptRemoteTask(task, logger2) {
+      attemptRemoteTask(task, logger) {
         return __async(this, null, function* () {
           const args = this._plugins.exec("spawn.args", [...task.commands], pluginContext(task, task.commands));
-          const raw = yield this.gitResponse(task, this.binary, args, this.outputHandler, logger2.step("SPAWN"));
-          const outputStreams = yield this.handleTaskData(task, args, raw, logger2.step("HANDLE"));
-          logger2(`passing response to task's parser as a %s`, task.format);
+          const raw = yield this.gitResponse(task, this.binary, args, this.outputHandler, logger.step("SPAWN"));
+          const outputStreams = yield this.handleTaskData(task, args, raw, logger.step("HANDLE"));
+          logger(`passing response to task's parser as a %s`, task.format);
           if (isBufferTask(task)) {
             return callTaskParser(task.parser, outputStreams);
           }
           return callTaskParser(task.parser, outputStreams.asStrings());
         });
       }
-      attemptEmptyTask(task, logger2) {
+      attemptEmptyTask(task, logger) {
         return __async(this, null, function* () {
-          logger2(`empty task bypassing child process to call to task's parser`);
+          logger(`empty task bypassing child process to call to task's parser`);
           return task.parser(this);
         });
       }
-      handleTaskData(task, args, result, logger2) {
+      handleTaskData(task, args, result, logger) {
         const { exitCode, rejection, stdOut, stdErr } = result;
         return new Promise((done, fail) => {
-          logger2(`Preparing to handle process response exitCode=%d stdOut=`, exitCode);
-          const { error: error4 } = this._plugins.exec("task.error", { error: rejection }, __spreadValues(__spreadValues({}, pluginContext(task, args)), result));
-          if (error4 && task.onError) {
-            logger2.info(`exitCode=%s handling with custom error handler`);
-            return task.onError(result, error4, (newStdOut) => {
-              logger2.info(`custom error handler treated as success`);
-              logger2(`custom error returned a %s`, objectToString(newStdOut));
+          logger(`Preparing to handle process response exitCode=%d stdOut=`, exitCode);
+          const { error } = this._plugins.exec("task.error", { error: rejection }, __spreadValues(__spreadValues({}, pluginContext(task, args)), result));
+          if (error && task.onError) {
+            logger.info(`exitCode=%s handling with custom error handler`);
+            return task.onError(result, error, (newStdOut) => {
+              logger.info(`custom error handler treated as success`);
+              logger(`custom error returned a %s`, objectToString(newStdOut));
               done(new GitOutputStreams(Array.isArray(newStdOut) ? Buffer.concat(newStdOut) : newStdOut, Buffer.concat(stdErr)));
             }, fail);
           }
-          if (error4) {
-            logger2.info(`handling as error: exitCode=%s stdErr=%s rejection=%o`, exitCode, stdErr.length, rejection);
-            return fail(error4);
+          if (error) {
+            logger.info(`handling as error: exitCode=%s stdErr=%s rejection=%o`, exitCode, stdErr.length, rejection);
+            return fail(error);
           }
-          logger2.info(`retrieving task output complete`);
+          logger.info(`retrieving task output complete`);
           done(new GitOutputStreams(Buffer.concat(stdOut), Buffer.concat(stdErr)));
         });
       }
-      gitResponse(task, command, args, outputHandler, logger2) {
+      gitResponse(task, command, args, outputHandler, logger) {
         return __async(this, null, function* () {
-          const outputLogger = logger2.sibling("output");
+          const outputLogger = logger.sibling("output");
           const spawnOptions = this._plugins.exec("spawn.options", {
             cwd: this.cwd,
             env: this.env,
@@ -4847,8 +3104,8 @@ var init_git_executor_chain = __esm({
           return new Promise((done) => {
             const stdOut = [];
             const stdErr = [];
-            logger2.info(`%s %o`, command, args);
-            logger2("%O", spawnOptions);
+            logger.info(`%s %o`, command, args);
+            logger("%O", spawnOptions);
             let rejection = this._beforeSpawn(task, args);
             if (rejection) {
               return done({
@@ -4864,11 +3121,11 @@ var init_git_executor_chain = __esm({
               }
             }));
             const spawned = spawn(command, args, spawnOptions);
-            spawned.stdout.on("data", onDataReceived(stdOut, "stdOut", logger2, outputLogger.step("stdOut")));
-            spawned.stderr.on("data", onDataReceived(stdErr, "stdErr", logger2, outputLogger.step("stdErr")));
-            spawned.on("error", onErrorReceived(stdErr, logger2));
+            spawned.stdout.on("data", onDataReceived(stdOut, "stdOut", logger, outputLogger.step("stdOut")));
+            spawned.stderr.on("data", onDataReceived(stdErr, "stdErr", logger, outputLogger.step("stdErr")));
+            spawned.on("error", onErrorReceived(stdErr, logger));
             if (outputHandler) {
-              logger2(`Passing child process stdOut/stdErr to custom outputHandler`);
+              logger(`Passing child process stdOut/stdErr to custom outputHandler`);
               outputHandler(command, spawned.stdout, spawned.stderr, [...args]);
             }
             this._plugins.exec("spawn.after", undefined, __spreadProps(__spreadValues({}, pluginContext(task, args)), {
@@ -5268,14 +3525,14 @@ var init_parse_remote_objects = __esm({
     init_utils();
     remoteMessagesObjectParsers = [
       new RemoteLineParser(/^remote:\s*(enumerating|counting|compressing) objects: (\d+),/i, (result, [action, count]) => {
-        const key2 = action.toLowerCase();
+        const key = action.toLowerCase();
         const enumeration = objectEnumerationResult(result.remoteMessages);
-        Object.assign(enumeration, { [key2]: asNumber(count) });
+        Object.assign(enumeration, { [key]: asNumber(count) });
       }),
       new RemoteLineParser(/^remote:\s*(enumerating|counting|compressing) objects: \d+% \(\d+\/(\d+)\),/i, (result, [action, count]) => {
-        const key2 = action.toLowerCase();
+        const key = action.toLowerCase();
         const enumeration = objectEnumerationResult(result.remoteMessages);
-        Object.assign(enumeration, { [key2]: asNumber(count) });
+        Object.assign(enumeration, { [key]: asNumber(count) });
       }),
       new RemoteLineParser(/total ([^,]+), reused ([^,]+), pack-reused (\d+)/i, (result, [total, reused, packReused]) => {
         const objects = objectEnumerationResult(result.remoteMessages);
@@ -5604,11 +3861,11 @@ var init_version = __esm({
     init_utils();
     NOT_INSTALLED = "installed=false";
     parsers7 = [
-      new LineParser(/version (\d+)\.(\d+)\.(\d+)(?:\s*\((.+)\))?/, (result, [major, minor, patch, agent2 = ""]) => {
-        Object.assign(result, versionResponse(asNumber(major), asNumber(minor), asNumber(patch), agent2));
+      new LineParser(/version (\d+)\.(\d+)\.(\d+)(?:\s*\((.+)\))?/, (result, [major, minor, patch, agent = ""]) => {
+        Object.assign(result, versionResponse(asNumber(major), asNumber(minor), asNumber(patch), agent));
       }),
-      new LineParser(/version (\d+)\.(\d+)\.(\D+)(.+)?$/, (result, [major, minor, patch, agent2 = ""]) => {
-        Object.assign(result, versionResponse(asNumber(major), asNumber(minor), patch, agent2));
+      new LineParser(/version (\d+)\.(\d+)\.(\D+)(.+)?$/, (result, [major, minor, patch, agent = ""]) => {
+        Object.assign(result, versionResponse(asNumber(major), asNumber(minor), patch, agent));
       })
     ];
   }
@@ -6379,10 +4636,19 @@ init_pathspec();
 init_utils();
 var Git = require_git();
 init_git_response_error();
-var simpleGit = gitInstanceFactory;
+var esm_default = gitInstanceFactory;
+
+// src/logger.ts
+var import_picocolors = __toESM(require_picocolors(), 1);
+var prefix = "[ git-ai ]";
+var log = (...msg) => console.log(`${import_picocolors.default.yellow(prefix)} ${msg.join("\n" + prefix + " ")}`);
+var error = (...msg) => console.error(`${import_picocolors.default.red(prefix)} ${import_picocolors.default.red(msg.join("\n" + prefix + " "))}`);
+var errorExit = (...msg) => {
+  error(...msg);
+  return process.exit(0);
+};
 
 // src/git.ts
-var git = simpleGit();
 var ignoredFiles = [
   "bun.lockb",
   "pnpm-lock.yaml",
@@ -6390,7 +4656,7 @@ var ignoredFiles = [
   "package-lock.json",
   "composer.lock"
 ].map((filename) => `:!${filename}`);
-var retrieveUnstagedChanges = async () => {
+var retrieveUnstagedChanges = async (git) => {
   const diff = await git.diff(["--staged", "--", ...ignoredFiles]);
   if (diff.length === 0) {
     return errorExit(`Repository's staged-area looks empty. No diff found to make a summary of.`, `Use \`git add <file>\` to stage files and try again.`);
@@ -6398,7 +4664,125 @@ var retrieveUnstagedChanges = async () => {
   return diff;
 };
 
+// src/prompt.ts
+import crypto from "crypto";
+import fs from "fs";
+
+// node_modules/bun-promptx/dist/index.mjs
+import {ptr} from "bun:ffi";
+import {dlopen, FFIType, suffix} from "bun:ffi";
+import {CString} from "bun:ffi";
+var encode = function(data) {
+  return utf8e.encode(data + "\0");
+};
+var toString = function(ptr3) {
+  const str = new CString(ptr3);
+  symbols.FreeString(str.ptr);
+  return str.toString();
+};
+var createSelection = function(items, options = {}) {
+  const stringifiedItems = JSON.stringify(items.map((item) => {
+    return {
+      text: item.text,
+      description: item.description || ""
+    };
+  }));
+  const returnedPtr = symbols.CreateSelection(ptr(encode(stringifiedItems)), ptr(encode(options.headerText || "Select an item: ")), ptr(encode(options.footerText || "")), options.perPage || 5);
+  const { selectedIndex, error: error2 } = JSON.parse(toString(returnedPtr));
+  if (error2 !== "") {
+    return {
+      selectedIndex: null,
+      error: error2
+    };
+  }
+  return {
+    selectedIndex: Number(selectedIndex),
+    error: null
+  };
+};
+import {ptr as ptr2} from "bun:ffi";
+var { platform, arch } = process;
+var filename;
+if (arch === "x64") {
+  filename = `../release/promptx-${platform}-amd64.${suffix}`;
+} else {
+  filename = `../release/promptx-${platform}-${arch}.${suffix}`;
+}
+var location = new URL(filename, import.meta.url).pathname;
+var { symbols } = dlopen(location, {
+  CreateSelection: {
+    args: [FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.int],
+    returns: FFIType.ptr
+  },
+  CreatePrompt: {
+    args: [FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.bool, FFIType.int],
+    returns: FFIType.ptr
+  },
+  FreeString: {
+    args: [FFIType.ptr],
+    returns: FFIType.void
+  }
+});
+var utf8e = new TextEncoder;
+
+// src/prompt.ts
+var options = [
+  {
+    text: "Accept",
+    description: "Take the AI-suggestion"
+  },
+  {
+    text: "Run again",
+    description: "Run another AI-request on the same diff for different suggestion"
+  },
+  {
+    text: "Abort",
+    description: "Abort the AI-suggestion"
+  }
+];
+var promptSelection = (suggestion) => {
+  console.log("\n", suggestion, "\n=====================\n");
+  return createSelection(options).selectedIndex;
+};
+var handleSelection = (git, suggestion) => {
+  const index = promptSelection(suggestion);
+  switch (index) {
+    case 0:
+      const randomFilename = crypto.randomBytes(8).toString("hex");
+      const filename2 = `/tmp/${randomFilename}`;
+      fs.writeFileSync(filename2, suggestion);
+      const proc = Bun.spawnSync(["nano", filename2], {
+        stdin: "inherit"
+      });
+      console.log(proc.stdout.toString());
+      break;
+    case 1:
+      log("Running again...");
+      handleSelection(git, suggestion);
+      break;
+    case 2:
+      errorExit("Aborted.");
+      break;
+    default:
+      errorExit("Unknown error.");
+  }
+};
+
 // src/index.ts
-var changes = await retrieveUnstagedChanges();
-var msg = await gitAi(changes);
-console.log(msg);
+var proc = Bun.spawnSync(["nano", "test.txt"], {
+  stdin: "inherit"
+});
+var git2 = esm_default();
+(async (diff) => {
+  const aiSuggestion = `
+feat: Add data-collector module
+
+This commit adds a new module called data-collector, which exports a
+function called dataCollector. The function accepts a string argument
+and currently does not have any implementation. This module can be used
+to collect and process data from various sources.
+
+The reason for this change is to separate the data collection logic into
+a separate module for better organization and maintainability.`;
+  handleSelection(git2, aiSuggestion);
+})(await retrieveUnstagedChanges(git2));
