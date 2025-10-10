@@ -1,25 +1,34 @@
-# @iammati/git-ai
+# ⚠️ Repository Archived
+
+This repository is **archived** and no longer maintained.  
+
+Development has moved to a newer repository:  
+👉 [git-ai-rust](https://github.com/iammati/git-ai-rust)
+
+Please visit the new repository for the latest updates, issues, and contributions.
+
+## @iammati/git-ai
 
 This AI-powered tool, based on Node.js, will help you summarizing changes done in a Git repository by analzying
 diffs / code changes and using [conventional-commits](https://www.conventionalcommits.org/en/v1.0.0/) to do that.
 
-## Why? AI.
+### Why? AI.
 
 I was lazy going through all my changes everytime and pull something together for a commit message. I wanted to have a tool that does that for me.
 
-## Requirements
+### Requirements
 
 You need a OpenAI API Key to use this tool. You can get one [here](https://platform.openai.com/account/api-keys). In addition to run git-ai you'll also need [bun.sh](https://bun.sh).
 
 
 
-## Installation
+### Installation
 
 ```bash
 bun install @iammati/git-ai -g
 ```
 
-## Usage
+### Usage
 
 Run the `git-ai` command inside a Git repository project where you added files into your staged-area (using `git add <file>`) and need a summary of a commit message for:
 
@@ -31,6 +40,6 @@ OPENAI_API_KEY=MY_AWESOME_KEY git-ai
 
 Copy 'n paste the response into your commit message and you're done!
 
-## License
+### License
 
 MIT
